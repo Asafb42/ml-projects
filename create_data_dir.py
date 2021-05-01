@@ -11,11 +11,41 @@ import shutil
 import os
 
 
+def remove_empty_folders(path):
+    """Function to remove empty folders"""
+    if not os.path.isdir(path):
+        return
+
+    # remove empty subfolders
+    files = os.listdir(path)
+    if len(files):
+        for f in files:
+            fullpath = os.path.join(path, f)
+            if os.path.isdir(fullpath):
+                remove_empty_folders(fullpath)
+
+    # if folder empty, delete it
+    files = os.listdir(path)
+    if len(files) == 0:
+        os.rmdir(path)
+
+
 def arrange_dir(dataroot):
-    for (root, dirs, files) in os.walk('dataroot', topdown=True):
-        # remove empty folders.
-        if len(files):
-            os.rmdir(root)
+
+    # Add the suffix A, B, etc. to the folders and move them to the top level. 
+    for top_dir in os.listdir(dataroot):
+        suffix = 'A'
+        print("top: ", top_dir)
+
+        top_path = os.path.join(dataroot, top_dir)
+        if os.path.isdir(top_path):
+            for sub_dir in os.listdir(top_path):
+                print("sub: ", sub_dir)
+                #os.rename(os.path.join(top_path, sub_dir), os.path.join(top_path, top_dir + suffix))
+                shutil.move(os.path.join(top_path, sub_dir), os.path.join(dataroot, top_dir + suffix))
+                suffix = chr(ord(suffix) + 1);
+
+    remove_empty_folders(dataroot)
 
 if __name__ == '__main__':
     opt = DirectoryOptions().parse() # get training options
