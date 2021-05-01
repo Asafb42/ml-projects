@@ -9,6 +9,17 @@ import splitfolders
 import shutil
 import os
 
+
+def arrange_dir(dataroot, suffix):
+    for (root, dirs, files) in os.walk('dataroot', topdown=True):
+        # remove empty folders.
+        if not files:
+            os.rmdir(root)
+        # if the folder is not empty, add the suffix to the folder name.
+        else:
+            os.rename(root, os.pathroot + suffix)
+
+
 if __name__ == '__main__':
     opt = DirectoryOptions().parse() # get training options
     
@@ -23,15 +34,3 @@ if __name__ == '__main__':
 
     splitfolders.ratio(opt.source_dir_B, output=opt.dest_dir, ratio=split_ratio)
     arrange_dir(opt.dest_dir, 'B')
-
-
-def arrange_dir(dataroot, suffix):
-    
-    for (root, dirs, files) in os.walk('dataroot', topdown=true):
-            
-    # remove empty folders.
-    if not files:
-        os.rmdir(root)
-    # if the folder is not empty, add the suffix to the folder name.
-    else:
-        os.rename(root, os.pathroot + suffix)
