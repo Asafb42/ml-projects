@@ -12,8 +12,7 @@ class DirectoryOptions():
 
     def initialize(self, parser):
         # Define parameters
-        parser.add_argument('--source_dir_A', required=True, help='path to the first images directory (required)')
-        parser.add_argument('--source_dir_B', type=str, default='', help='path to the second images directory (optional)')
+        parser.add_argument('--source_dir', required=True, help='path to the source image directory, containing subdirectories for each class')
         parser.add_argument('--dest_dir', type=str, default='./dataset', help='path to the destination directory')
         parser.add_argument('--val', type=int, default=0, choices=range(0,101), help='precentage [0-100] of validation split of the data. Default is no validation split')
         parser.add_argument('--test', type=int, default=0, choices=range(0,101), help='precentage [0-100] of test split of the data. Default is no test split')
