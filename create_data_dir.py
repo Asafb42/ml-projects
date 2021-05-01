@@ -14,7 +14,7 @@ import os
 def arrange_dir(dataroot):
     for (root, dirs, files) in os.walk('dataroot', topdown=True):
         # remove empty folders.
-        if not files:
+        if len(files):
             os.rmdir(root)
 
 if __name__ == '__main__':
