@@ -51,6 +51,9 @@ class DirectoryOptions():
         print(message)
 
         # save to the disk
+        if os.path.exists(opt.dest_dir):
+            raise ValueError("Dataset directory {} already exists".format(opt.dest_dir))
+
         util.mkdirs(opt.dest_dir)
         file_name = os.path.join(opt.dest_dir, 'dir_opt.txt')
         with open(file_name, 'wt') as opt_file:

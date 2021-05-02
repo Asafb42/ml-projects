@@ -35,17 +35,17 @@ def arrange_dir(dataroot):
     # Add the suffix A, B, etc. to the folders and move them to the top level. 
     for top_dir in os.listdir(dataroot):
         suffix = 'A'
-        print("top: ", top_dir)
-
         top_path = os.path.join(dataroot, top_dir)
+
         if os.path.isdir(top_path):
             for sub_dir in os.listdir(top_path):
-                print("sub: ", sub_dir)
-                #os.rename(os.path.join(top_path, sub_dir), os.path.join(top_path, top_dir + suffix))
+                # Move the sub-folder to the root directory and change it's according to the suffix. 
                 shutil.move(os.path.join(top_path, sub_dir), os.path.join(dataroot, top_dir + suffix))
-                suffix = chr(ord(suffix) + 1);
+                suffix = chr(ord(suffix) + 1); # Update suffix.
 
+    # Remove all the remoaning excess folders.
     remove_empty_folders(dataroot)
+
 
 if __name__ == '__main__':
     opt = DirectoryOptions().parse() # get training options
