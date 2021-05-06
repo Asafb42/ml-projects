@@ -203,6 +203,10 @@ class Visualizer():
             counter_ratio (float) -- progress (percentage) in the current epoch, between 0 to 1
             losses (OrderedDict)  -- training losses stored in the format of (name, float) pairs
         """
+        if self.use_tensorboard:
+            for label in list(losses.keys()):
+                self.writer.add_scalar(label + "_train_loss", losses[label], epoch + counter_ratio)
+
         if self.use_visdom:
             if not hasattr(self, 'plot_data'):
                 self.plot_data = {'X': [], 'Y': [], 'legend': list(losses.keys())}
