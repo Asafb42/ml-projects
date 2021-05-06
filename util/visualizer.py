@@ -71,7 +71,7 @@ class Visualizer():
     
         if self.use_tensorboard:
             from torch.utils.tensorboard import SummaryWriter
-            self.writer = SummaryWriter()
+            self.writer = SummaryWriter(opt.log_dir)
 
         if self.use_visdom and (self.display_id > 0):  # connect to a visdom server given <display_port> and <display_server>
             import visdom
@@ -112,7 +112,7 @@ class Visualizer():
         """
         if self.use_tensorboard:
             from torch import reshape
-            
+
             for label, image in visuals.items():
                 display_image = reshape((image + 1)/2, image.shape[1:])
                 self.writer.add_image(label, display_image, epoch)
