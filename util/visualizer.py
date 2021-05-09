@@ -111,11 +111,14 @@ class Visualizer():
             save_result (bool) - - if save the current results to an HTML file
         """
         if self.use_tensorboard:
-            from torch import reshape
+            from torch import tensor
 
+            images, labels = [], ""
             for label, image in visuals.items():
-                display_image = reshape((image + 1)/2, image.shape[1:])
-                self.writer.add_image(label, display_image, epoch)
+                image_numpy = util.tensor2im(image)
+                images.append(image_numpy)
+                labels = labels + " / " + label
+            self.writer.add_images(labels, tensor(images), global_step=epoch, dataformats='NHWC')
 
         if self.use_visdom:
             if self.display_id > 0:  # show images in the browser using visdom
@@ -187,7 +190,6 @@ class Visualizer():
                 ims, txts, links = [], [], []
 
                 for label, image_numpy in visuals.items():
-                    image_numpy = util.tensor2im(image)
                     img_path = 'epoch%.3d_%s.png' % (n, label)
                     ims.append(img_path)
                     txts.append(label)
