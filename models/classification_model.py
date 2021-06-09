@@ -66,7 +66,7 @@ class ClassificationModel(BaseModel):
         
         if self.isTrain:  # only defined during training time
             # Define loss functions.
-            self.criterionLoss = torch.nn.CrossEntropyLoss()
+            self.criterionLoss = torch.nn.CrossEntropyLoss().to(self.device)
             # define and initialize optimizers.
             self.optimizer = torch.optim.SGD(self.netClassification.parameters(), lr=0.001, momentum=0.9)
             self.optimizers = [self.optimizer]
@@ -81,7 +81,7 @@ class ClassificationModel(BaseModel):
             input: a dictionary that contains the data itself and its metadata information.
         """
         self.data = input['data'].to(self.device)  # get image data
-        self.label = input['label']
+        self.label = input['label'].to(self.device)
         self.image_path = input['path']  # get image paths
 
 
