@@ -110,6 +110,10 @@ class Visualizer():
             epoch (int) - - the current epoch
             save_result (bool) - - if save the current results to an HTML file
         """
+        
+        if self.opt.no_display:
+            return
+
         if self.use_tensorboard:
             from torch import tensor
 

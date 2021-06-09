@@ -21,6 +21,7 @@ class ClassificationModel(BaseModel):
         parser.add_argument('--architecture', type=str, default='resnet50', help='Classification model architecture [resnet50]')  # You can define new arguments for this model.
         if is_train:
             parser.add_argument('--pretrained', action='store_true', help='Load a classification model pretrained on imagenet')
+            parser.set_defaults(no_display=True)  # Classification model uses a multilabel dataset.
 
         return parser
 
@@ -55,7 +56,7 @@ class ClassificationModel(BaseModel):
         """
         BaseModel.__init__(self, opt)  # call the initialization method of BaseModel
         # specify the training losses you want to print out. The program will call base_model.get_current_losses to plot the losses to the console and save them to the disk.
-        self.loss_names = ['train']
+        self.loss_names = ['train_loss']
 
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks to save and load networks.
         # you can use opt.isTrain to specify different behaviors for training and test. For example, some networks will not be used during test, and you don't need to load them.
@@ -94,8 +95,8 @@ class ClassificationModel(BaseModel):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         # caculate the intermediate results if necessary; here self.output has been computed during function <forward>
         # calculate loss given the input and intermediate results
-        self.loss_train = self.criterionLoss(self.output, self.label)
-        self.loss_train.backward() # calculate gradients
+        self.loss_train_loss = self.criterionLoss(self.output, self.label)
+        self.loss_train_loss.backward() # calculate gradients
 
 
     def optimize_parameters(self):
