@@ -30,6 +30,13 @@ if __name__ == '__main__':
     dataset_size = len(dataset)    # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
 
+    if opt.use_val:
+        opt.phase = 'val'
+        val_set = create_dataset(opt) # create the validation set.
+        opt.phase = 'train'
+        val_set_size = len(val_set)
+        print('The number of validation images = %d' % val_set_size)
+
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
@@ -73,5 +80,32 @@ if __name__ == '__main__':
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
             model.save_networks('latest')
             model.save_networks(epoch)
+
+        if (opt.use_val) and (epoch % opt.val_freq == 0):
+            epoch_iter = 0
+        
+            # running sum of correct predictions during evaluation.
+            running_corrects = 0
+        
+            opt.phase = 'val'
+            opt.isTrain = False
+
+            model.eval()
+
+            for i, data in enumerate(val_set):  # inner loop for validation within one epoch
+                iter_start_time = time.time()   # timer for computation per iteration
+
+                epoch_iter += opt.batch_size
+                model.set_input(data)           # unpack data from the validation set and apply preprocessing
+                running_corrects += model.get_corrects() # forward data and calculate correct predictions
+            
+            # print validation accuracy
+            val_acc = running_corrects.double() / val_set_size
+            print('validation accuracy at the end of epoch %d:  %f' % (epoch, val_acc))
+
+            # change the model back to train mode.
+            opt.phase = 'train'
+            opt.isTrain = True
+            model.train()
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))

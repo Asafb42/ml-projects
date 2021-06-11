@@ -21,7 +21,7 @@ class ClassificationModel(BaseModel):
         parser.add_argument('--architecture', type=str, default='resnet50', help='Classification model architecture [resnet50]')  # You can define new arguments for this model.
         if is_train:
             parser.add_argument('--pretrained', action='store_true', help='Load a classification model pretrained on imagenet')
-            parser.set_defaults(no_display=True)  # Classification model uses a multilabel dataset.
+            parser.set_defaults(no_display=True, use_val=True)
 
         return parser
 
@@ -74,7 +74,6 @@ class ClassificationModel(BaseModel):
 
         # Our program will automatically call <model.setup> to define schedulers, load networks, and print networks
 
-
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
@@ -98,6 +97,20 @@ class ClassificationModel(BaseModel):
         self.loss_train_loss = self.criterionLoss(self.output, self.label)
         self.loss_train_loss.backward() # calculate gradients
 
+    def get_corrects(self):
+        """Forward function used in test time.
+
+        This function wraps <forward> function in no_grad() so we don't save intermediate steps for backprop
+        It also calls <compute_visuals> to produce additional visualization results
+        """
+        # forward data
+        with torch.no_grad():
+            self.forward()
+        # calculate prediction running corrects
+        _, preds = torch.max(self.output, 1)
+        corrects = torch.sum(preds == self.label)
+
+        return corrects
 
     def optimize_parameters(self):
         """Update network weights; it will be called in every training iteration."""
