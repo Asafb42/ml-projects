@@ -56,7 +56,7 @@ class ClassificationModel(BaseModel):
         """
         BaseModel.__init__(self, opt)  # call the initialization method of BaseModel
         # specify the training losses you want to print out. The program will call base_model.get_current_losses to plot the losses to the console and save them to the disk.
-        self.loss_names = ['train_loss']
+        self.loss_names = ['train_loss', 'train_acc']
 
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks to save and load networks.
         # you can use opt.isTrain to specify different behaviors for training and test. For example, some networks will not be used during test, and you don't need to load them.
@@ -96,6 +96,10 @@ class ClassificationModel(BaseModel):
         # calculate loss given the input and intermediate results
         self.loss_train_loss = self.criterionLoss(self.output, self.label)
         self.loss_train_loss.backward() # calculate gradients
+
+        _, preds = torch.max(self.output, 1)
+        corrects = torch.sum(preds == self.label)
+        self.loss_train_acc = corrects.double() / len(preds)
 
     def get_corrects(self):
         """Forward function used in test time.
