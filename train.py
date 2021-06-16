@@ -82,8 +82,6 @@ if __name__ == '__main__':
             model.save_networks('latest')
             model.save_networks(epoch)
 
-        model.update_learning_rate()    # update learning rates at the end of every training epoch.
-
         if (opt.use_val) and (epoch % opt.val_freq == 0):        
             # running sum of correct predictions during evaluation.
             running_corrects = 0
@@ -121,3 +119,4 @@ if __name__ == '__main__':
             model.train()
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
+        model.update_learning_rate()    # update learning rates at the end of every training epoch.
