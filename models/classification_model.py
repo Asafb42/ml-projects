@@ -21,7 +21,7 @@ class ClassificationModel(BaseModel):
         parser.add_argument('--architecture', type=str, default='resnet50', help='Classification model architecture [resnet50]')  # You can define new arguments for this model.
         parser.add_argument('--pretrained', action='store_true', help='Load a classification model pretrained on imagenet')
         if is_train:
-            parser.set_defaults(no_display=True, use_val=True)
+            parser.set_defaults(no_display=True, use_val=True, lr_policy='cosine')
         else:
             parser.set_defaults(no_display=True, eval=True)
         return parser

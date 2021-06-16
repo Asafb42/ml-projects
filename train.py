@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
             model.eval()
 
-            with torch.no_grad
+            with torch.no_grad:
                 for i, data in enumerate(val_set):  # inner loop for validation within one epoch
                     iter_start_time = time.time()   # timer for computation per iteration
 
