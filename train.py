@@ -42,6 +42,7 @@ if __name__ == '__main__':
     model.setup(opt)               # regular setup: load and print networks; create schedulers
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
     total_iters = 0                # the total number of training iterations
+    best_val_acc = 0
 
     for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
         epoch_start_time = time.time()  # timer for entire epoch
@@ -91,7 +92,7 @@ if __name__ == '__main__':
 
             model.eval()
 
-            with torch.no_grad:
+            with torch.no_grad():
                 for i, data in enumerate(val_set):  # inner loop for validation within one epoch
                     iter_start_time = time.time()   # timer for computation per iteration
 
@@ -106,7 +107,13 @@ if __name__ == '__main__':
             val_acc = running_corrects.double() / val_set_size
             val_losses = {'val_acc': val_acc}
             visualizer.print_validation(epoch, val_losses)
-            
+        
+            # save model with the best validation accuracy        
+            if val_acc > best_val_acc:
+                print('Saving the model with the best validation accuracy')
+                model.save_networks('best_val_acc')
+                best_val_acc = val_acc
+
             # change the model back to train mode.
             opt.phase = 'train'
             opt.isTrain = True
