@@ -261,7 +261,7 @@ class Visualizer():
             t_comp (float) -- computational time per data point (normalized by batch_size)
             t_data (float) -- data loading time per data point (normalized by batch_size)
         """
-        message = 'Validation evaluation at epoch: %d, ' % (epoch, iters, t_comp, t_data)
+        message = 'Validation evaluation at epoch: %d, ' % (epoch)
         for k, v in losses.items():
             message += '%s: %.3f ' % (k, v)
 
