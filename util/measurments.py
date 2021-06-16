@@ -3,7 +3,7 @@ from os import listdir
 from os.path import isfile, join
 import re
 import numpy as np
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_auc_score
 import scipy.stats
 from scipy import stats
 
@@ -13,6 +13,7 @@ def analyze_results(X,y):
     patients = len(y)
     tn, fp, fn, tp = confusion_matrix(y, X).ravel()
 
+    auc = calc_roc_auc_score(X, y)
     dice = calc_dice(tp, fn, fp)
     sens = calc_sensitivity(tp, fn)
     acc = calc_acc(tp, tn, patients)
@@ -23,7 +24,7 @@ def analyze_results(X,y):
         ppv = calc_positive_predictive_value(tp, fp)
     npv = calc_negative_predictive_value(fn, tn)
     spec = calc_specificity(fp, tn)
-    return dice, ppv, sens, acc , npv, spec, tp, fn, fp, tn
+    return auc, dice, ppv, sens, acc , npv, spec, tp, fn, fp, tn
 
 def clac_youden_index(y, X):
 
@@ -316,6 +317,9 @@ def calc_negative_predictive_value(fn, tn):
 
 def calc_specificity(fp, tn):
     return 100.0 * (tn / (tn + fp))
+
+def calc_roc_auc_score(X,y):
+    return roc_auc_score(y, X)*100
 
 if __name__ == "__main__":
     analyze_results(debug=True)

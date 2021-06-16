@@ -56,6 +56,12 @@ class MultilabelDataset(BaseDataset):
         # Get the required transforms
         self.transform = get_transform(self.opt, grayscale=(self.opt.input_nc == 1))
 
+        # Get the full dataset size
+        self.dataset_size = sum(self.sizes)
+
+        # Set num of test images for test mode.
+        if opt.phase == 'test':
+            opt.num_test = self.dataset_size
 
     def __getitem__(self, index):
         """Return a data point and its metadata information.
@@ -72,11 +78,11 @@ class MultilabelDataset(BaseDataset):
         # randomize the label index.
         label = random.randint(0, self.label_num - 1)
 
-        # Get the path and inage
+        # Get the path and image
         path = self.paths[label][index % self.sizes[label]]  # make sure index is within the range
         img = Image.open(path).convert('RGB')
 
-        # apply image transformation
+        # apply image transformation.
         img_transformed = self.transform(img)
 
         return {'data': img_transformed, 'label': label, 'path': path}
@@ -85,4 +91,4 @@ class MultilabelDataset(BaseDataset):
         """Return the total number of images in the dataset, across all labels.
 
         """
-        return sum(self.sizes)
+        return self.dataset_size

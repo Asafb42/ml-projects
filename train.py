@@ -97,7 +97,11 @@ if __name__ == '__main__':
 
                 epoch_iter += opt.batch_size
                 model.set_input(data)           # unpack data from the validation set and apply preprocessing
-                running_corrects += model.get_corrects() # forward data and calculate correct predictions
+                
+                preds, labels = model.get_predictions() # forward data and calculate predictions
+                corrects = torch.sum(preds == labels)
+
+                running_corrects += corrects
             
             # print validation accuracy
             val_acc = running_corrects.double() / val_set_size
