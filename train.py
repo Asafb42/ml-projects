@@ -19,6 +19,7 @@ See training and test tips at: https://github.com/junyanz/pytorch-CycleGAN-and-p
 See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/qa.md
 """
 import time
+import torch
 from options.train_options import TrainOptions
 from data import create_dataset
 from models import create_model
@@ -81,9 +82,7 @@ if __name__ == '__main__':
             model.save_networks('latest')
             model.save_networks(epoch)
 
-        if (opt.use_val) and (epoch % opt.val_freq == 0):
-            epoch_iter = 0
-        
+        if (opt.use_val) and (epoch % opt.val_freq == 0):        
             # running sum of correct predictions during evaluation.
             running_corrects = 0
         
@@ -92,21 +91,22 @@ if __name__ == '__main__':
 
             model.eval()
 
-            for i, data in enumerate(val_set):  # inner loop for validation within one epoch
-                iter_start_time = time.time()   # timer for computation per iteration
+            with torch.no_grad
+                for i, data in enumerate(val_set):  # inner loop for validation within one epoch
+                    iter_start_time = time.time()   # timer for computation per iteration
 
-                epoch_iter += opt.batch_size
-                model.set_input(data)           # unpack data from the validation set and apply preprocessing
+                    model.set_input(data)           # unpack data from the validation set and apply preprocessing
+                    
+                    preds, labels = model.get_predictions() # forward data and calculate predictions
+                    corrects = torch.sum(preds == labels)
+
+                    running_corrects += corrects
                 
-                preds, labels = model.get_predictions() # forward data and calculate predictions
-                corrects = torch.sum(preds == labels)
-
-                running_corrects += corrects
-            
             # print validation accuracy
             val_acc = running_corrects.double() / val_set_size
-            print('validation accuracy at the end of epoch %d:  %f' % (epoch, val_acc))
-
+            val_losses = {'val_acc': val_acc}
+            visualizer.print_validation(epoch, val_losses)
+            
             # change the model back to train mode.
             opt.phase = 'train'
             opt.isTrain = True
