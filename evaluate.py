@@ -32,8 +32,6 @@ if __name__ == '__main__':
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
 
-    opt.print_options(opt)
-
     predictions = []
     labels = []
 
