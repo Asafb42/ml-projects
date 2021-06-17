@@ -58,6 +58,12 @@ if __name__ == '__main__':
     predictions = np.array(predictions)
     labels = np.array(labels)
 
-    auc, dice, ppv, sens, acc , npv, spec, tp, fn, fp, tn = analyze_results(predictions, labels)
-    print("Evaluation results:\nTest size: %d\nAUC Score: %f\nAccuracy: %f\nSensitivity: %f\nSpecificity: %f\nPrecision: %f\n" % (len(dataset), auc, acc, sens, spec, ppv))
+    # If it's not a binary classification problem calculate only accuracy. 
+    # If it's a binary classification problem calculate numerus binary evalutaion metrics. 
+    if opt.label_num > 2:
+        test_acc = 100 * np.sum(predictions == labels) / len(dataset)
+        print("Test evaluation results:\nTest size: %d\nAccuracy: %f\n" % (len(dataset), test_acc))
+    else:
+        auc, dice, ppv, sens, acc , npv, spec, tp, fn, fp, tn = analyze_results(predictions, labels)
+        print("Test evaluation results:\nTest size: %d\nAUC Score: %f\nAccuracy: %f\nSensitivity: %f\nSpecificity: %f\nPrecision: %f\n" % (len(dataset), auc, acc, sens, spec, ppv))
     print("Computation time: %.2f sec" %(end_time - start_time))
