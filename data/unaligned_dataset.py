@@ -14,7 +14,24 @@ class UnalignedDataset(BaseDataset):
     You can train the model with the dataset flag '--dataroot /path/to/data'.
     Similarly, you need to prepare two directories:
     '/path/to/data/testA' and '/path/to/data/testB' during test time.
+    You can change the name of the directory by using the '--dirA dirA_name' and '--dirB dirB_name'
     """
+
+    @staticmethod
+    def modify_commandline_options(parser, is_train):
+        """Add new dataset-specific options, and rewrite default values for existing options.
+
+        Parameters:
+            parser          -- original option parser
+            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
+
+        label_num is the number of classes in the multilabel classification task. It's defaults to the binary case.
+        Returns:
+            the modified parser.
+        """
+        parser.add_argument('--dirA', type=str, default=None, help='The name of the first image directory')
+        parser.add_argument('--dirB', type=str, default=None, help='The name of the second image directory')
+        return parser
 
     def __init__(self, opt):
         """Initialize this dataset class.
@@ -23,8 +40,16 @@ class UnalignedDataset(BaseDataset):
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         BaseDataset.__init__(self, opt)
-        self.dir_A = os.path.join(opt.dataroot, opt.phase + 'A')  # create a path '/path/to/data/trainA'
-        self.dir_B = os.path.join(opt.dataroot, opt.phase + 'B')  # create a path '/path/to/data/trainB'
+
+        if opt.dirA == None:
+            self.dir_A = os.path.join(opt.dataroot, opt.phase + 'A')  # create a path '/path/to/data/trainA'
+        else:
+            self.dir_A = os.path.join(opt.dataroot, opt.phase, opt.dirA)  # create a path '/path/to/data/train/dirA_name'
+
+        if opt.dirB == None:
+            self.dir_B = os.path.join(opt.dataroot, opt.phase + 'B')  # create a path '/path/to/data/trainA'
+        else:
+            self.dir_B = os.path.join(opt.dataroot, opt.phase, opt.dirB)  # create a path '/path/to/data/train/dirA_name'
 
         self.A_paths = sorted(make_dataset(self.dir_A, opt.max_dataset_size))   # load images from '/path/to/data/trainA'
         self.B_paths = sorted(make_dataset(self.dir_B, opt.max_dataset_size))    # load images from '/path/to/data/trainB'
