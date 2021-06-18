@@ -16,6 +16,7 @@ class DirectoryOptions():
         parser.add_argument('--dest_dir', type=str, default='./dataset', help='path to the destination directory')
         parser.add_argument('--val', type=int, default=0, choices=range(0,101), help='precentage [0-100] of validation split of the data. Default is no validation split')
         parser.add_argument('--test', type=int, default=0, choices=range(0,101), help='precentage [0-100] of test split of the data. Default is no test split')
+        parser.add_argument('--use_suffix', action='store_true', help='Arrange the dataset by trainA, trainB, testA, testB, etc.')
         self.initialized = True
         return parser
 

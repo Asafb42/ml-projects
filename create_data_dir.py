@@ -1,8 +1,10 @@
 """
-Script to create data directories (trainA, trainB, testA, testB, etc.) in accordance to the expected dataroot of the main train/test scripts.
+Script to create data directories in accordance to the expected dataroot of the main train/test scripts.
 The user can choose whether to create train, test and validation data directories from a given source or multiple source directories. 
 The source directory should contain a subdirectory for each class in the dataset, even if the dataset contains a single class. 
 The user can also choose the train/val/test split ratio.
+The default directory format will have train, test, val directories and a subdirectory for each class.
+If the user choose the use_suffix option the directory will be arrange in the trainA, trainB, testA, testB, etc. format.
 """
 from options.directory_options import DirectoryOptions
 from util import util
@@ -57,4 +59,6 @@ if __name__ == '__main__':
     split_ratio = (train_ratio / 100, opt.val / 100, opt.test / 100)
     
     splitfolders.ratio(opt.source_dir, output=opt.dest_dir, ratio=split_ratio)
-    arrange_dir(opt.dest_dir)
+    
+    if opt.use_suffix:
+        arrange_dir(opt.dest_dir)
