@@ -3,9 +3,10 @@ import os
 import sys
 import ntpath
 import time
+import matplotlib.pyplot as plt
 from . import util, html
 from subprocess import Popen, PIPE
-
+from torch import tensor
 
 if sys.version_info[0] == 2:
     VisdomExceptionBase = Exception
@@ -103,7 +104,7 @@ class Visualizer():
         Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
     def display_current_results(self, visuals, epoch, save_result):
-        """Display current results on tensorboard or visdom; save current results to an HTML file.
+        """Display current results on console, tensorboard or visdom; save current results to an HTML file.
 
         Parameters:
             visuals (OrderedDict) - - dictionary of images to display or save
@@ -114,8 +115,31 @@ class Visualizer():
         if self.opt.no_display:
             return
 
+        if self.opt.console_display:
+
+            images, labels = [], []
+            for label, image in visuals.items():
+                image_numpy = util.tensor2im(image)
+                images.append(image_numpy)
+                labels.append(label)
+            
+            r = 4
+            c = int(np.ceil(len(images) / r))
+            fig, axs = plt.subplots(r, c)
+
+            cnt = 0
+            for i in range(r):
+                for j in range(c):
+                    if cnt > len(images):
+                        break;
+
+                    axs[i,j].imshow(images[cnt])
+                    axs[i,j].set_title(labels[cnt])
+                    axs[i,j].axis('off')
+                    cnt += 1
+            plt.show()
+
         if self.use_tensorboard:
-            from torch import tensor
 
             images, labels = [], ""
             for label, image in visuals.items():

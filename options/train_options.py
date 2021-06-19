@@ -13,6 +13,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--visualization', type=str, default='tensorboard', choices=['tensorboard', 'visdom'], help='the visualization tool being used [tensorboard | visdom]')
         parser.add_argument('--log_dir', type=str, default='./runs', help='tensorboard log directory')
         parser.add_argument('--no_display', action='store_true', help='use this flag to choose not to display images during training')
+        parser.add_argument('--console_display', action='store_true', help='use this flag to display images in console during training')
         parser.add_argument('--display_freq', type=int, default=400, help='frequency of showing training results on screen')
         parser.add_argument('--display_ncols', type=int, default=4, help='if positive, display all images in a single visdom web panel with certain number of images per row.')
         parser.add_argument('--display_id', type=int, default=1, help='window id of the web display')
