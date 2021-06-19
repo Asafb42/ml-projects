@@ -74,6 +74,11 @@ class Visualizer():
             from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(opt.log_dir)
 
+        if self.opt.console_display:
+            self.fig_dir = os.path.join(opt.checkpoints_dir, opt.name, 'figures')
+            print('create figures directory %s...' % self.fig_dir)
+            util.mkdirs(self.fig_dir)
+
         if self.use_visdom and (self.display_id > 0):  # connect to a visdom server given <display_port> and <display_server>
             import visdom
             self.ncols = opt.display_ncols
@@ -123,7 +128,7 @@ class Visualizer():
                 images.append(image_numpy)
                 labels.append(label)
             
-            r = 4
+            r = 2
             c = int(np.ceil(len(images) / r))
             fig, axs = plt.subplots(r, c)
 
@@ -133,10 +138,13 @@ class Visualizer():
                     if cnt > len(images):
                         break;
 
-                    axs[i,j].imshow(images[cnt])
+                    axs[i,j].imshow(images[cnt], cmap='gray')
                     axs[i,j].set_title(labels[cnt])
                     axs[i,j].axis('off')
                     cnt += 1
+
+            fig_path = os.path.join(self.fig_dir, 'epoch%.3d_figure.png' % (epoch))
+            fig.savefig(fig_path)
             plt.show()
 
         if self.use_tensorboard:
