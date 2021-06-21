@@ -25,7 +25,6 @@ class UnalignedDataset(BaseDataset):
             parser          -- original option parser
             is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
 
-        label_num is the number of classes in the multilabel classification task. It's defaults to the binary case.
         Returns:
             the modified parser.
         """

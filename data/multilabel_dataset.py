@@ -9,8 +9,7 @@ class MultilabelDataset(BaseDataset):
     """
     This dataset class can load multilabeled datasets.
 
-    It requires a train directories to host training images from each of the classes in the format '/path/to/data/trainA', '/path/to/data/trainB' etc. 
-    And a test directories to host test images from each class in the format '/path/to/data/testA', '/path/to/data/testB' etc. 
+    It requires a train/val/test directories to host training images from each of the classes in the format '/path/to/data/train/labelA', '/path/to/data/train/labelB' etc. 
     You can train the model with the dataset flag '--dataroot /path/to/data'.
     """
 
@@ -22,11 +21,14 @@ class MultilabelDataset(BaseDataset):
             parser          -- original option parser
             is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
 
-        label_num is the number of classes in the multilabel classification task. It's defaults to the binary case.
+        label_num is the number of classes in the multilabel classification task and it is tehe same as the number of subdirectories in the dataroot.
+        It's defaults to the binary case.
         Returns:
             the modified parser.
         """
         parser.add_argument('--label_num', type=int, default=2, help='Num of labels for a multilabel classification task')
+        parser.add_argument('--labelA', type=str, default=None, help='The name of the first label for a binary classification')
+        parser.add_argument('--labelB', type=str, default=None, help='The name of the second label for a binary classification')
         return parser
 
     def __init__(self, opt):
@@ -38,14 +40,28 @@ class MultilabelDataset(BaseDataset):
         BaseDataset.__init__(self, opt)
         
         self.label_num = opt.label_num
+        self.labels = []
         self.dirs  = []
         self.paths = []
         self.sizes = []
 
+        phase_dir = os.path.join(opt.dataroot, opt.phase)
+        
+        # Get the class labels
+        if (self.label_num == 2) and (opt.labelA) and (opt.labelB):
+            self.labels = [opt.labelA, opt.labelB]
+        else:
+            for class_name in os.listdir(phase_dir):
+                class_dir = os.path.join(phase_dir, class_name)
+                if os.path.isdir(class_dir):
+                    self.labels.append(class_name)
+
+        # Remove excess labels. Taking only the first label_num labels by alphabetical order.
+        self.labels = self.labels[:self.label_num]
+
         for i in range(self.label_num):
             # A list for all the labels directories
-            label_letter_index = chr(ord('A') + i)
-            self.dirs.append(os.path.join(opt.dataroot, opt.phase + label_letter_index))
+            self.dirs.append(os.path.join(phase_dir, self.labels[i]))
 
             # A list for all the labels images paths
             self.paths.append(sorted(make_dataset(self.dirs[i], opt.max_dataset_size)))
