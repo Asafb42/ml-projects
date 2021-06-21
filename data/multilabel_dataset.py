@@ -79,6 +79,8 @@ class MultilabelDataset(BaseDataset):
         if opt.phase == 'test':
             opt.num_test = self.dataset_size
 
+        self.print_details()
+        
     def __getitem__(self, index):
         """Return a data point and its metadata information.
 
@@ -108,3 +110,7 @@ class MultilabelDataset(BaseDataset):
 
         """
         return self.dataset_size
+
+    def print_details(self):
+        for i in range(self.label_num):
+            print("%s class size: %d" % (self.labels[i], self.sizes[i]))
