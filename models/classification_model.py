@@ -2,7 +2,7 @@ import torch
 import torchvision 
 from .base_model import BaseModel
 from . import networks
-
+from .attention import SelfAttention
 
 class ClassificationModel(BaseModel):
     @staticmethod
@@ -20,6 +20,7 @@ class ClassificationModel(BaseModel):
         parser.set_defaults(dataset_mode='multilabel')  # Classification model uses a multilabel dataset.
         parser.add_argument('--architecture', type=str, default='resnet50', help='Classification model architecture [resnet50]')  # You can define new arguments for this model.
         parser.add_argument('--pretrained', action='store_true', help='Load a classification model pretrained on imagenet')
+        parser.add_argument('--self_attention', action='store_true', help='Use a self attention layer at the end of the classification network')
         if is_train:
             parser.set_defaults(no_display=True, use_val=True, lr_policy='cosine')
         else:
@@ -33,7 +34,23 @@ class ClassificationModel(BaseModel):
         if opt.architecture == 'resnet50':
             model = torchvision.models.resnet50(pretrained=opt.pretrained)
             # Update classification layer size
-            model.fc = torch.nn.Linear(model.fc.in_features, opt.label_num)
+            fc_layer = torch.nn.Linear(model.fc.in_features, opt.label_num)
+
+            if opt.self_attention:
+                attention_layer = SelfAttention(in_dim=model.fc.in_features)
+                layers = []
+                for name, children in model.named_children():
+                    if name == 'avgpool':
+                        layers.append(attention_layer)
+                    if name is not 'fc':
+                        layers.append(children)
+
+                layers.append(fc_layer)
+                model = torch.nn.Sequential(*layers)
+                print(model)
+            else:
+                model.fc = fc_layer
+
             # Update input size
             opt.crop_size = 224
 
