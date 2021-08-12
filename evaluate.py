@@ -18,7 +18,7 @@ from data import create_dataset
 from models import create_model
 from util.visualizer import save_images
 from util import html
-
+from sklearn.metrics import confusion_matrix
 
 if __name__ == '__main__':
     torch.manual_seed(0)    # set a manual seed for evaluation reproducibility.
@@ -63,6 +63,7 @@ if __name__ == '__main__':
     if opt.label_num > 2:
         test_acc = 100 * np.sum(predictions == labels) / len(dataset)
         print("Test evaluation results:\nTest size: %d\nAccuracy: %f\n" % (len(dataset), test_acc))
+        print("Confusion Matrix:\n", confusion_matrix(labels, predictions))
     else:
         auc, dice, ppv, sens, acc , npv, spec, tp, fn, fp, tn = analyze_results(predictions, labels)
         print("Test evaluation results:\nTest size: %d\nAUC Score: %f\nAccuracy: %f\nSensitivity: %f\nSpecificity: %f\nPrecision: %f\n" % (len(dataset), auc, acc, sens, spec, ppv))
