@@ -40,7 +40,7 @@ class SelfAttention(nn.Module):
 
         out = self.gamma*out + x
 
-        return out
+        return out, attention
 
 class ProjectorBlock(nn.Module):
     def __init__(self, in_features, out_features):
@@ -96,11 +96,11 @@ class SelfAttentionClassifier(nn.Module):
             x = self.projector_layer(x)
 
         # Add attention layer.
-        x = self.attention_layer(x)
+        x, attention = self.attention_layer(x)
         # Add average pooling layer.
         x = self.avg_pool(x)
         # Flatten and add final FC layer for classification.
         x = self.flatten_layer(x)
         x = self.fc_layer(x)
 
-        return x
+        return x, attention

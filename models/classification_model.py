@@ -44,7 +44,7 @@ class ClassificationModel(BaseModel):
                 backbone = torch.nn.Sequential(*layers)
                 
                 # Create the Resnet50 model with self attention.
-                model = SelfAttentionClassifier(in_features=model.fc.in_features, label_num=opt.label_num, projector_dim=128, backbone=backbone)
+                model = SelfAttentionClassifier(in_features=model.fc.in_features, label_num=opt.label_num, backbone=backbone)
                 #print(model)
             else:
                 # Update classification layer size
@@ -104,8 +104,10 @@ class ClassificationModel(BaseModel):
 
     def forward(self):
         """Run forward pass. This will be called by both functions <optimize_parameters> and <test>."""
-        self.output = self.netClassification(self.data)  # generate output image given the input data
-
+        if self.opt.self_attention:
+            self.output, self.attention = self.netClassification(self.data)  # generate output image given the input data
+        else:
+            self.output = self.netClassification(self.data)  # generate output image given the input data
 
     def backward(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
