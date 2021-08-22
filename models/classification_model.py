@@ -2,7 +2,7 @@ import torch
 import torchvision 
 from .base_model import BaseModel
 from . import networks
-from .attention import SelfAttention
+from .attention import SelfAttention, ProjectorBlock
 
 class ClassificationModel(BaseModel):
     @staticmethod
@@ -37,10 +37,12 @@ class ClassificationModel(BaseModel):
             fc_layer = torch.nn.Linear(model.fc.in_features, opt.label_num)
 
             if opt.self_attention:
-                attention_layer = SelfAttention(in_dim=model.fc.in_features)
+                projector_layer = ProjectorBlock(in_features=model.fc.in_features, out_features=128)
+                attention_layer = SelfAttention(in_dim=128)
                 layers = []
                 for name, children in model.named_children():
                     if name == 'avgpool':
+                        layers.append(projector_layer)
                         layers.append(attention_layer)
                     if name is not 'fc':
                         layers.append(children)
