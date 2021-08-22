@@ -34,23 +34,25 @@ class ClassificationModel(BaseModel):
         if opt.architecture == 'resnet50':
             model = torchvision.models.resnet50(pretrained=opt.pretrained)
             # Update classification layer size
-            fc_layer = torch.nn.Linear(model.fc.in_features, opt.label_num)
 
             if opt.self_attention:
                 projector_layer = ProjectorBlock(in_features=model.fc.in_features, out_features=128)
                 attention_layer = SelfAttention(in_dim=128)
+                fc_layer = torch.nn.Linear(128, opt.label_num)
                 layers = []
                 for name, children in model.named_children():
-                    if name == 'avgpool':
-                        layers.append(projector_layer)
-                        layers.append(attention_layer)
+                    #if name == 'avgpool':
+                        #layers.append(projector_layer)
+                        #layers.append(attention_layer)
                     if name is not 'fc':
                         layers.append(children)
 
+                fc_layer = torch.nn.Linear(model.fc.in_features, opt.label_num)
                 layers.append(fc_layer)
                 model = torch.nn.Sequential(*layers)
                 print(model)
             else:
+                fc_layer = torch.nn.Linear(model.fc.in_features, opt.label_num)
                 model.fc = fc_layer
 
             # Update input size
@@ -107,7 +109,9 @@ class ClassificationModel(BaseModel):
 
     def forward(self):
         """Run forward pass. This will be called by both functions <optimize_parameters> and <test>."""
+        print("model input: ", self.data.size())
         self.output = self.netClassification(self.data)  # generate output image given the input data
+        print("model output: ", self.output.size())
 
 
     def backward(self):

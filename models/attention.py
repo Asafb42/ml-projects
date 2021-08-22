@@ -23,16 +23,33 @@ class SelfAttention(nn.Module):
                 attention: B X N X N (N is Width*Height)
         """
         m_batchsize,C,width ,height = x.size()
-        proj_query  = self.query_conv(x).view(m_batchsize,-1,width*height).permute(0,2,1) # B X CX(N)
-        proj_key =  self.key_conv(x).view(m_batchsize,-1,width*height) # B X C x (*W*H)
-        energy =  torch.bmm(proj_query,proj_key) # transpose check
-        attention = self.softmax(energy) # BX (N) X (N) 
-        proj_value = self.value_conv(x).view(m_batchsize,-1,width*height) # B X C X N
+        print("attention input: ", x.size())
+        print("batch size: %d\nchannels: %d\nwidth: %d\nheight: %d" % (m_batchsize, C, width, height))
 
+        proj_query  = self.query_conv(x).view(m_batchsize,-1,width*height).permute(0,2,1) # B X CX(N)
+        print("query size: ", proj_query.size())
+
+        proj_key =  self.key_conv(x).view(m_batchsize,-1,width*height) # B X C x (*W*H)
+        print("key size: ", proj_key.size())
+
+        energy =  torch.bmm(proj_query,proj_key) # transpose check
+        print("energy size: ", energy.size())
+
+        attention = self.softmax(energy) # BX (N) X (N) 
+        print("attention size: ", attention.size())
+
+        proj_value = self.value_conv(x).view(m_batchsize,-1,width*height) # B X C X N
+        print("value size: ", proj_value.size())
+ 
         out = torch.bmm(proj_value,attention.permute(0,2,1) )
+        print("attention bmm out size: ", out.size())
+       
         out = out.view(m_batchsize,C,width,height)
-        
+        print("attention reshape out size: ", out.size())
+
         out = self.gamma*out + x
+        print("attention output size: ", out.size())
+
         return out
 
 class ProjectorBlock(nn.Module):
