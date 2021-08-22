@@ -2,7 +2,7 @@ import torch
 import torchvision 
 from .base_model import BaseModel
 from . import networks
-from .attention import SelfAttention, ProjectorBlock
+from .attention import SelfAttentionClassifier
 
 class ClassificationModel(BaseModel):
     @staticmethod
@@ -33,25 +33,21 @@ class ClassificationModel(BaseModel):
 
         if opt.architecture == 'resnet50':
             model = torchvision.models.resnet50(pretrained=opt.pretrained)
-            # Update classification layer size
 
             if opt.self_attention:
-                projector_layer = ProjectorBlock(in_features=model.fc.in_features, out_features=128)
-                attention_layer = SelfAttention(in_dim=128)
-                fc_layer = torch.nn.Linear(128, opt.label_num)
+                # Get the Resnet50 Convolutional backbone.
                 layers = []
                 for name, children in model.named_children():
-                    #if name == 'avgpool':
-                        #layers.append(projector_layer)
-                        #layers.append(attention_layer)
-                    if name is not 'fc':
+                    if (name is not 'fc') and (name is not 'avgpool'):
                         layers.append(children)
-
-                fc_layer = torch.nn.Linear(model.fc.in_features, opt.label_num)
-                layers.append(fc_layer)
-                model = torch.nn.Sequential(*layers)
-                print(model)
+                
+                backbone = torch.nn.Sequential(*layers)
+                
+                # Create the Resnet50 model with self attention.
+                model = SelfAttentionClassifier(in_features=model.fc.in_features, label_num=opt.label_num, projector_dim=128, backbone=backbone)
+                #print(model)
             else:
+                # Update classification layer size
                 fc_layer = torch.nn.Linear(model.fc.in_features, opt.label_num)
                 model.fc = fc_layer
 
@@ -64,7 +60,6 @@ class ClassificationModel(BaseModel):
         # Initialize network for training.
         net = networks.init_net(model, init_type=opt.init_type, init_gain=opt.init_gain, gpu_ids=self.gpu_ids)
         return net
-
 
     def __init__(self, opt):
         """Initialize this model class.
@@ -86,7 +81,7 @@ class ClassificationModel(BaseModel):
         
         # define networks; you can use opt.isTrain to specify different behaviors for training and test.
         self.netClassification = self.get_network_by_name(opt)
-        
+
         if self.isTrain:  # only defined during training time
             # Define loss functions.
             self.criterionLoss = torch.nn.CrossEntropyLoss().to(self.device)
@@ -109,9 +104,7 @@ class ClassificationModel(BaseModel):
 
     def forward(self):
         """Run forward pass. This will be called by both functions <optimize_parameters> and <test>."""
-        print("model input: ", self.data.size())
         self.output = self.netClassification(self.data)  # generate output image given the input data
-        print("model output: ", self.output.size())
 
 
     def backward(self):
