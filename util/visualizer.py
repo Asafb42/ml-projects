@@ -121,31 +121,35 @@ class Visualizer():
             return
 
         if self.opt.console_display:
-
-            images, labels = [], []
-            for label, image in visuals.items():
-                image_numpy = util.tensor2im(image)
-                images.append(image_numpy)
-                labels.append(label)
-            
-            r = 2
-            c = int(np.ceil(len(images) / r))
-            fig, axs = plt.subplots(r, c)
-
-            cnt = 0
-            for i in range(r):
-                for j in range(c):
-                    if cnt > len(images):
-                        break;
-
-                    axs[i,j].imshow(images[cnt], cmap='gray')
-                    axs[i,j].set_title(labels[cnt])
-                    axs[i,j].axis('off')
-                    cnt += 1
-
             fig_path = os.path.join(self.fig_dir, 'epoch%.3d_figure.png' % (epoch))
-            fig.savefig(fig_path)
-            plt.show()
+            webpage = html.HTML(self.web_dir, 'Experiment name = %s' % self.name, refresh=1)
+
+            if self.opt.self_attention:
+                save_images(webpage, visuals, fig_path)
+            else:
+                images, labels = [], []
+                for label, image in visuals.items():
+                    image_numpy = util.tensor2im(image)
+                    images.append(image_numpy)
+                    labels.append(label)
+                
+                r = 2
+                c = int(np.ceil(len(images) / r))
+                fig, axs = plt.subplots(r, c)
+
+                cnt = 0
+                for i in range(r):
+                    for j in range(c):
+                        if cnt > len(images):
+                            break;
+
+                        axs[i,j].imshow(images[cnt], cmap='gray')
+                        axs[i,j].set_title(labels[cnt])
+                        axs[i,j].axis('off')
+                        cnt += 1
+
+                fig.savefig(fig_path)
+                plt.show()
 
         if self.use_tensorboard:
 

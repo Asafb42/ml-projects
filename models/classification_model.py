@@ -2,7 +2,8 @@ import torch
 import torchvision 
 from .base_model import BaseModel
 from . import networks
-from .attention import SelfAttentionClassifier
+from .attention import SelfAttentionClassifier, calculate_heatmap
+from random import randint
 
 class ClassificationModel(BaseModel):
     @staticmethod
@@ -22,9 +23,9 @@ class ClassificationModel(BaseModel):
         parser.add_argument('--pretrained', action='store_true', help='Load a classification model pretrained on imagenet')
         parser.add_argument('--self_attention', action='store_true', help='Use a self attention layer at the end of the classification network')
         if is_train:
-            parser.set_defaults(no_display=True, use_val=True, lr_policy='cosine')
+            parser.set_defaults(use_val=True, lr_policy='cosine')
         else:
-            parser.set_defaults(no_display=True, eval=True)
+            parser.set_defaults(eval=True)
         return parser
 
 
@@ -78,7 +79,11 @@ class ClassificationModel(BaseModel):
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks to save and load networks.
         # you can use opt.isTrain to specify different behaviors for training and test. For example, some networks will not be used during test, and you don't need to load them.
         self.model_names = ['Classification']
-        
+
+        # Visualize attention gates
+        if self.opt.self_attention:
+            self.visual_names.append('heatmap')
+
         # define networks; you can use opt.isTrain to specify different behaviors for training and test.
         self.netClassification = self.get_network_by_name(opt)
 
@@ -139,3 +144,10 @@ class ClassificationModel(BaseModel):
         self.backward()              # calculate gradients for network
         self.optimizer.step()        # update gradients for network
 
+    def compute_visuals(self):
+        """Calculate additional output images for visualization"""
+        
+        # Choose a random sample from the batch
+        if self.opt.self_attention:
+            idx = randint(0, self.opt.batch_size - 1)
+            self.heatmap = calculate_heatmap(self.data, self.attention)

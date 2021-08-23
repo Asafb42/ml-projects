@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+import numpy as np
+import cv2
+from util import util
 
 class SelfAttention(nn.Module):
     """ Self attention Layer"""
@@ -40,7 +43,7 @@ class SelfAttention(nn.Module):
 
         out = self.gamma*out + x
 
-        return out, attention
+        return out
 
 class ProjectorBlock(nn.Module):
     def __init__(self, in_features, out_features):
@@ -96,11 +99,33 @@ class SelfAttentionClassifier(nn.Module):
             x = self.projector_layer(x)
 
         # Add attention layer.
-        x, attention = self.attention_layer(x)
+        attention_out = self.attention_layer(x)
         # Add average pooling layer.
-        x = self.avg_pool(x)
+        x = self.avg_pool(attention_out)
         # Flatten and add final FC layer for classification.
         x = self.flatten_layer(x)
         x = self.fc_layer(x)
 
-        return x, attention
+        return x, attention_out
+
+def calculate_heatmap(data, attention):
+    
+    # post-process attention weights
+    weights = torch.abs(attention)
+    b, c, h, w = weights.size()
+    weights = torch.sum(weights, dim=1).view(b, 1, h, w)
+
+    # Convert tensors to numpy images
+    img = util.tensor2im(data)
+    weights = util.tensor2im(weights)
+
+    # resize and convert to image 
+    weights = cv2.resize(weights, (img.shape[0], img.shape[1]))
+    #weights /= weights.max()
+    #weights *= 255
+    #weights =  255 - weights.astype('uint8')
+
+    # generate heat maps 
+    heatmap = cv2.applyColorMap(weights, cv2.COLORMAP_JET)
+    heatmap = cv2.addWeighted(heatmap, 0.3, img, 0.7, 0)
+    return heatmap
