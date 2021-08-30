@@ -108,6 +108,37 @@ class SelfAttentionClassifier(nn.Module):
 
         return x, attention_out
 
+class LinearAttentionClassifier(nn.Module):
+    def __init__(self, in_features, label_num, projector_dim=512, backbone=None):
+        super().__init__()
+        self.backbone = backbone
+        self.projector_dim = projector_dim
+
+        self.dense = torch.nn.Conv2d(in_channels=in_features, out_channels=projector_dim, kernel_size=8, padding=0, bias=True)
+        self.projector_layer = ProjectorBlock(in_features=in_features, out_features=projector_dim)
+        self.attention_layer = LinearAttentionBlock(in_features=projector_dim)
+        self.classify = torch.nn.Linear(projector_dim, label_num, bias=True)
+
+    def forward(self, x):
+        
+        # Use classification backbone if available.
+        if self.backbone is not None:
+            l = self.backbone(x)
+
+        # Calculate input weights
+        g = self.dense(l)
+
+        # Project to an intermediate feature map.
+        l = self.projector_layer(l)
+
+        # Add attention layer.
+        c, g = self.attention_layer(l, g)
+
+        # Final FC layer for classification.
+        x = self.classify(g)
+
+        return x, c
+
 def calculate_heatmap(data, attention):
     
     # post-process attention weights

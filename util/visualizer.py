@@ -124,7 +124,7 @@ class Visualizer():
             fig_path = os.path.join(self.fig_dir, 'epoch%.3d_figure.png' % (epoch))
             webpage = html.HTML(self.web_dir, 'Experiment name = %s' % self.name, refresh=1)
 
-            if self.opt.self_attention:
+            if self.opt.attention is not None:
                 save_images(webpage, visuals, fig_path)
             else:
                 images, labels = [], []

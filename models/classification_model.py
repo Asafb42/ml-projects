@@ -2,7 +2,7 @@ import torch
 import torchvision 
 from .base_model import BaseModel
 from . import networks
-from .attention import SelfAttentionClassifier, calculate_heatmap
+from .attention import SelfAttentionClassifier, LinearAttentionClassifier, calculate_heatmap
 from random import randint
 
 class ClassificationModel(BaseModel):
@@ -21,7 +21,7 @@ class ClassificationModel(BaseModel):
         parser.set_defaults(dataset_mode='multilabel')  # Classification model uses a multilabel dataset.
         parser.add_argument('--architecture', type=str, default='resnet50', help='Classification model architecture [resnet50]')  # You can define new arguments for this model.
         parser.add_argument('--pretrained', action='store_true', help='Load a classification model pretrained on imagenet')
-        parser.add_argument('--self_attention', action='store_true', help='Use a self attention layer at the end of the classification network')
+        parser.add_argument('--attention', type=str, default=None, help='Specify the type of attention layer to use at the end of the network [None | self | linear]')
         if is_train:
             parser.set_defaults(use_val=True, lr_policy='cosine')
         else:
@@ -35,7 +35,7 @@ class ClassificationModel(BaseModel):
         if opt.architecture == 'resnet50':
             model = torchvision.models.resnet50(pretrained=opt.pretrained)
 
-            if opt.self_attention:
+            if opt.attention is not None:
                 # Get the Resnet50 Convolutional backbone.
                 layers = []
                 for name, children in model.named_children():
@@ -45,7 +45,13 @@ class ClassificationModel(BaseModel):
                 backbone = torch.nn.Sequential(*layers)
                 
                 # Create the Resnet50 model with self attention.
-                model = SelfAttentionClassifier(in_features=model.fc.in_features, label_num=opt.label_num, backbone=backbone)
+                if opt.attention == 'self':
+                    model = SelfAttentionClassifier(in_features=model.fc.in_features, label_num=opt.label_num, backbone=backbone)
+                if opt.attention == 'linear':
+                    model = LinearAttentionClassifier(in_features=model.fc.in_features, label_num=opt.label_num, backbone=backbone)
+                else:
+                    raise NotImplementedError('Attention model name [%s] is not recognized' % opt.attention)
+
                 #print(model)
             else:
                 # Update classification layer size
@@ -81,7 +87,7 @@ class ClassificationModel(BaseModel):
         self.model_names = ['Classification']
 
         # Visualize attention gates
-        if self.opt.self_attention:
+        if self.opt.attention is not None:
             self.visual_names.append('heatmap')
 
         # define networks; you can use opt.isTrain to specify different behaviors for training and test.
@@ -109,7 +115,7 @@ class ClassificationModel(BaseModel):
 
     def forward(self):
         """Run forward pass. This will be called by both functions <optimize_parameters> and <test>."""
-        if self.opt.self_attention:
+        if self.opt.attention is not None:
             self.output, self.attention = self.netClassification(self.data)  # generate output image given the input data
         else:
             self.output = self.netClassification(self.data)  # generate output image given the input data
@@ -148,6 +154,6 @@ class ClassificationModel(BaseModel):
         """Calculate additional output images for visualization"""
         
         # Choose a random sample from the batch
-        if self.opt.self_attention:
+        if self.opt.attention is not None:
             idx = randint(0, self.opt.batch_size - 1)
             self.heatmap = calculate_heatmap(self.data, self.attention)
