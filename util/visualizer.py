@@ -121,11 +121,14 @@ class Visualizer():
             return
 
         if self.opt.console_display:
-            fig_path = os.path.join(self.fig_dir, 'epoch%.3d_figure.png' % (epoch))
-            webpage = html.HTML(self.web_dir, 'Experiment name = %s' % self.name, refresh=1)
-
             if self.opt.attention is not None:
-                save_images(webpage, visuals, fig_path)
+                # save attention heatmaps to the disk
+                for label, image in visuals.items():
+                    image_numpy = util.tensor2im(image)
+                    img_path = os.path.join(self.fig_dir, 'epoch%.3d_%s.png' % (epoch, label))
+                    util.save_image(image_numpy, img_path)
+
+
             else:
                 images, labels = [], []
                 for label, image in visuals.items():
