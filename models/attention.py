@@ -117,13 +117,21 @@ class LinearAttentionClassifier(nn.Module):
         self.dense = torch.nn.Conv2d(in_channels=in_features, out_channels=projector_dim, kernel_size=8, padding=0, bias=True)
         self.projector_layer = ProjectorBlock(in_features=in_features, out_features=projector_dim)
         self.attention_layer = LinearAttentionBlock(in_features=projector_dim)
-        self.classify = torch.nn.Linear(projector_dim, label_num, bias=True)
+        
+        self.avg_pool = torch.nn.AdaptiveAvgPool2d((1, 1))
+        self.flatten_layer = torch.nn.Flatten()
+
+        self.classify = torch.nn.Linear(in_features + projector_dim, label_num, bias=True)
 
     def forward(self, x):
         
         # Use classification backbone if available.
         if self.backbone is not None:
             l = self.backbone(x)
+
+        # Add average pooling layer and flatten.
+        x = self.avg_pool(l)
+        x = self.flatten_layer(x)
 
         # Calculate input weights
         g = self.dense(l)
@@ -133,6 +141,9 @@ class LinearAttentionClassifier(nn.Module):
 
         # Add attention layer.
         c, g = self.attention_layer(l, g)
+
+        # Concatenate attention and backbone outputs
+        g = torch.cat((g,x), dim=1)
 
         # Final FC layer for classification.
         x = self.classify(g)
