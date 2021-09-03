@@ -89,6 +89,9 @@ class ClassificationModel(BaseModel):
         # Visualize attention gates
         if self.opt.attention is not None:
             self.visual_names.append('heatmap')
+        else:
+        # If there is no attention remove the display option
+            self.opt.no_display = True
 
         # define networks; you can use opt.isTrain to specify different behaviors for training and test.
         self.netClassification = self.get_network_by_name(opt)

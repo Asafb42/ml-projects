@@ -151,6 +151,7 @@ class Visualizer():
                         axs[i,j].axis('off')
                         cnt += 1
 
+                fig_path = os.path.join(self.fig_dir, 'epoch%.3d_figure.png' % (epoch))
                 fig.savefig(fig_path)
                 plt.show()
 
