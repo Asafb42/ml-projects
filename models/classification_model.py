@@ -65,7 +65,11 @@ class ClassificationModel(BaseModel):
             raise NotImplementedError('Classification model name [%s] is not recognized' % opt.architecture)
 
         # Initialize network for training.
-        net = networks.init_net(model, init_type=opt.init_type, init_gain=opt.init_gain, gpu_ids=self.gpu_ids)
+        #net = networks.init_net(model, init_type=opt.init_type, init_gain=opt.init_gain, gpu_ids=self.gpu_ids)
+        if len(self.gpu_ids) > 0:
+            assert(torch.cuda.is_available())
+            model.to(self.gpu_ids[0])
+            net = torch.nn.DataParallel(model, self.gpu_ids)  # multi-GPUs
         return net
 
     def __init__(self, opt):
