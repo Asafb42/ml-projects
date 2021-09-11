@@ -70,7 +70,7 @@ class AttentionCycleGANModel(BaseModel):
             self.model_names = ['G_A', 'G_B']
 
         # Load the attention model, and freeze it's parameters to prevent it from learning.
-        self.attention_net = self.load_model_by_path(opt.attention_model_path)
+        self.attention_net = self.load_model_by_path(opt.attention_model_path, name='Classification')
         self.set_requires_grad([self.attention_net], False)
         
         # Set the attention num of channels
