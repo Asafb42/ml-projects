@@ -4,6 +4,7 @@ from util.image_pool import ImagePool
 from .base_model import BaseModel
 from . import networks
 from torch.nn.functional import interpolate
+from .attention import calculate_heatmap
 
 class AttentionCycleGANModel(BaseModel):
     """
@@ -123,21 +124,22 @@ class AttentionCycleGANModel(BaseModel):
         _, self.att_B = self.attention_net(self.real_B)
 
         # post-process attention maps
-        att_A = torch.sum(torch.abs(att_A), dim=1)
-        att_A = interpolate(att_A, (real_A.size()[2], real_A.size()[3]))
-        print("Attention size: ", att_A.size())
+        b, c, h, w = self.att_A.size()
+        self.att_A = torch.sum(torch.abs(self.att_A), dim=1).view(b, 1, h, w)
+        self.att_A = interpolate(self.att_A, (self.real_A.size()[2], self.real_A.size()[3]))
 
-        att_B = torch.sum(torch.abs(att_B), dim=1)
-        att_B = interpolate(att_B, (real_B.size()[2], real_B.size()[3]))    
+        b, c, h, w = self.att_B.size()
+        self.att_B = torch.sum(torch.abs(self.att_B), dim=1).view(b, 1, h, w)
+        self.att_B = interpolate(self.att_B, (self.real_B.size()[2], self.real_B.size()[3]))    
 
         # Send attention maps to device
-        att_A = att_A.to(self.device)
-        att_B = att_B.to(self.device)
+        self.att_A = self.att_A.to(self.device)
+        self.att_B = self.att_B.to(self.device)
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>.
-        Add the attention map of input A when for the first direction (AtoB) and add the attention map of B for the reverse"""
-        print("Cat Size: ", torch.cat((self.real_A, self.att_A), dim=1).size())
+        Add the attention map of input A for the first direction (AtoB) and add the attention map of B for the reversed direction.
+        """
 
         self.fake_B = self.netG_A(torch.cat((self.real_A, self.att_A), dim=1))  # G_A(A,att_A)
         self.rec_A = self.netG_B(torch.cat((self.fake_B, self.att_A), dim=1))   # G_B(G_A(A, att_A), att_A)
@@ -184,10 +186,10 @@ class AttentionCycleGANModel(BaseModel):
         # Identity loss
         if lambda_idt > 0:
             # G_A should be identity if real_B is fed: ||G_A(B) - B||
-            self.idt_A = self.netG_A(self.real_B)
+            self.idt_A = self.netG_A(torch.cat((self.real_B, self.att_B), dim=1))
             self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt
             # G_B should be identity if real_A is fed: ||G_B(A) - A||
-            self.idt_B = self.netG_B(self.real_A)
+            self.idt_B = self.netG_B(torch.cat((self.real_A, self.att_A), dim=1))
             self.loss_idt_B = self.criterionIdt(self.idt_B, self.real_A) * lambda_A * lambda_idt
         else:
             self.loss_idt_A = 0

@@ -121,13 +121,12 @@ class Visualizer():
             return
 
         if self.opt.console_display:
-            if self.opt.attention is not None:
+            if (hasattr(self.opt, 'attention')) and (self.opt.attention is not None):
                 # save attention heatmaps to the disk
                 for label, image in visuals.items():
                     image_numpy = util.tensor2im(image)
                     img_path = os.path.join(self.fig_dir, 'epoch%.3d_%s.png' % (epoch, label))
                     util.save_image(image_numpy, img_path)
-
 
             else:
                 images, labels = [], []
