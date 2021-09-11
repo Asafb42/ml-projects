@@ -237,7 +237,7 @@ class BaseModel(ABC):
                 for param in net.parameters():
                     param.requires_grad = requires_grad
 
-    def save_model(self)
+    def save_model(self):
         """ Save model architecture to the disk
         """
         for name in self.model_names:
