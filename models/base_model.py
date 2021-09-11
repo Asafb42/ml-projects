@@ -87,6 +87,7 @@ class BaseModel(ABC):
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
+        self.save_model()
 
     def train(self):
         """Make models train mode during train time"""
@@ -149,7 +150,7 @@ class BaseModel(ABC):
         return errors_ret
 
     def save_networks(self, epoch):
-        """Save all the networks to the disk.
+        """Save all the networks parameters to the disk.
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
@@ -181,7 +182,7 @@ class BaseModel(ABC):
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
     def load_networks(self, epoch):
-        """Load all the networks from the disk.
+        """Load all the networks parameters from the disk.
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
@@ -235,3 +236,33 @@ class BaseModel(ABC):
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
+
+    def save_model(self)
+        """ Save model architecture to the disk
+        """
+        for name in self.model_names:
+            if isinstance(name, str):
+                save_filename = '%s_model.pth' % (name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    torch.save(net.module.cpu(), save_path)
+                    net.cuda(self.gpu_ids[0])
+                else:
+                    torch.save(net.cpu(), save_path)
+                print("Saved %s model architecture to disk" % name)
+
+    def load_model_by_path(self, load_path, epoch='best_val_acc'):
+        """Load a model architecture from the disk by it's path. The model is loaded with the parameters given in the specified epoch.
+        The best parameters for the model are loaded by default.
+        Parameters:
+            load_path   -- The path of the model architecture to load.
+            epoch       -- The epoch of the parameters to load (best val acc by default).
+        """
+        print('loading the model from %s' % load_path)
+        # if you are using PyTorch newer than 0.4 (e.g., built from
+        # GitHub source), you can remove str() on self.device
+        loaded_model = torch.load(load_path, map_location=str(self.device))
+        loaded_model.load_networks(epoch)
+        return loaded_model
