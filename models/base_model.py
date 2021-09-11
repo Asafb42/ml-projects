@@ -87,7 +87,7 @@ class BaseModel(ABC):
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
-        self.save_model()
+        self.save_model(name=opt.name)
 
     def train(self):
         """Make models train mode during train time"""
@@ -237,21 +237,18 @@ class BaseModel(ABC):
                 for param in net.parameters():
                     param.requires_grad = requires_grad
 
-    def save_model(self):
-        """ Save model architecture to the disk
+    def save_model(self, name):
+        """ Save entire model architecture to the disk.
         """
-        for name in self.model_names:
-            if isinstance(name, str):
-                save_filename = '%s_model.pth' % (name)
-                save_path = os.path.join(self.save_dir, save_filename)
-                net = getattr(self, 'net' + name)
+        save_filename = '%s_model.pth' % (name)
+        save_path = os.path.join(self.save_dir, save_filename)
 
-                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu(), save_path)
-                    net.cuda(self.gpu_ids[0])
-                else:
-                    torch.save(net.cpu(), save_path)
-                print("Saved %s model architecture to disk" % name)
+        if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+            torch.save(self, save_path)
+            self.cuda(self.gpu_ids[0])
+        else:
+            torch.save(self.cpu(), save_path)
+        print("Saved %s model architecture to disk" % name)
 
     def load_model_by_path(self, load_path, epoch='best_val_acc'):
         """Load a model architecture from the disk by it's path. The model is loaded with the parameters given in the specified epoch.
