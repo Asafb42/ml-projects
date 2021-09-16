@@ -163,4 +163,4 @@ class ClassificationModel(BaseModel):
         # Choose a random sample from the batch
         if self.opt.attention is not None:
             idx = randint(0, self.opt.batch_size - 1)
-            self.heatmap = calculate_heatmap(self.data, self.attention)
+            self.heatmap, _ = calculate_heatmap(self.data, self.attention)

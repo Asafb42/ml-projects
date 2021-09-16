@@ -62,7 +62,7 @@ class AttentionCycleGANModel(BaseModel):
             visual_names_A.append('idt_B')
             visual_names_B.append('idt_A')
 
-
+        self.batch_size = opt.batch_size
         self.visual_names = visual_names_A + visual_names_B  # combine visualizations for A and B
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>.
         if self.isTrain:
@@ -75,7 +75,7 @@ class AttentionCycleGANModel(BaseModel):
         self.set_requires_grad([self.attention_net], False)
         
         # Set the attention num of channels
-        self.attention_nc = 1
+        self.attention_nc = 3
         
         # define networks (both Generators and discriminators)
         # The naming is different from those used in the paper.
@@ -124,14 +124,15 @@ class AttentionCycleGANModel(BaseModel):
         _, self.att_B = self.attention_net(self.real_B)
 
         # post-process attention maps
-        b, c, h, w = self.att_A.size()
-        self.att_A = torch.sum(torch.abs(self.att_A), dim=1).view(b, 1, h, w)
-        self.att_A = interpolate(self.att_A, (self.real_A.size()[2], self.real_A.size()[3]))
+        self.heatmap_A, self.att_A = calculate_heatmap(self.real_A, self.att_A)
+        self.heatmap_B, self.att_B = calculate_heatmap(self.real_B, self.att_B)
 
-        b, c, h, w = self.att_B.size()
-        self.att_B = torch.sum(torch.abs(self.att_B), dim=1).view(b, 1, h, w)
-        self.att_B = interpolate(self.att_B, (self.real_B.size()[2], self.real_B.size()[3]))    
+        self.att_A = torch.from_numpy(self.att_A)
+        self.att_B = torch.from_numpy(self.att_B)
 
+        self.att_A = self.att_A.permute(2, 0, 1).unsqueeze(0)
+        self.att_B = self.att_B.permute(2, 0, 1).unsqueeze(0)
+        
         # Send attention maps to device
         self.att_A = self.att_A.to(self.device)
         self.att_B = self.att_B.to(self.device)
@@ -222,8 +223,3 @@ class AttentionCycleGANModel(BaseModel):
         self.backward_D_A()      # calculate gradients for D_A
         self.backward_D_B()      # calculate graidents for D_B
         self.optimizer_D.step()  # update D_A and D_B's weights
-
-    def compute_visuals(self):
-        """Calculate additional output images for visualization"""
-        self.heatmap_A = calculate_heatmap(self.real_A, self.att_A)
-        self.heatmap_B = calculate_heatmap(self.real_B, self.att_B)

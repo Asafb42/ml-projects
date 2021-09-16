@@ -168,6 +168,6 @@ def calculate_heatmap(data, attention):
     #weights =  255 - weights.astype('uint8')
 
     # generate heat maps 
-    heatmap = cv2.applyColorMap(weights, cv2.COLORMAP_JET)
-    heatmap = cv2.addWeighted(heatmap, 0.3, img, 0.7, 0)
-    return heatmap
+    weights = cv2.applyColorMap(weights, cv2.COLORMAP_JET)
+    heatmap = cv2.addWeighted(weights, 0.3, img, 0.7, 0)
+    return heatmap, weights
