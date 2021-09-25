@@ -86,7 +86,7 @@ class BaseModel(ABC):
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+        self.print_networks(opt)
         self.save_model()
 
     def train(self):
@@ -206,11 +206,11 @@ class BaseModel(ABC):
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
 
-    def print_networks(self, verbose):
+    def print_networks(self, opt):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
-            verbose (bool) -- if verbose: print the network architecture
+            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         print('---------- Networks initialized -------------')
         for name in self.model_names:
@@ -219,8 +219,9 @@ class BaseModel(ABC):
                 num_params = 0
                 for param in net.parameters():
                     num_params += param.numel()
-                if verbose:
-                    print(net)
+                if opt.verbose:
+                    from torchsummary import summary
+                    summary(net, (opt.input_nc, opt.crop_size, opt.crop_size))
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
 
