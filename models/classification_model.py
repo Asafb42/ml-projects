@@ -52,7 +52,6 @@ class ClassificationModel(BaseModel):
                 else:
                     raise NotImplementedError('Attention model name [%s] is not recognized' % opt.attention)
 
-                #print(model)
             else:
                 # Update classification layer size
                 fc_layer = torch.nn.Linear(model.fc.in_features, opt.label_num)
