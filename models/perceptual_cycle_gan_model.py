@@ -46,18 +46,13 @@ class PerceptualCycleGANModel(BaseModel):
 
         return parser
 
-    def load_aux_net(self, opt):
-        loaded_model = self.load_model_by_path(opt.aux_model_path, name='Classification')
-        
-        # Get the Convolutional backbone.
-        layers = []
-        for name, children in loaded_model.named_children():
-            if (name is not 'fc') and (name is not 'avgpool'):
-                layers.append(children)
-        
-        loaded_model = torch.nn.Sequential(*layers)
-        
-        return loaded_model
+    def get_activation(self, name):
+        """
+        Define a hook to get intermediate activation results
+        """
+        def hook(model, input, output):
+            self.activation[name] = output.detach()
+        return hook
 
     def __init__(self, opt):
         """Initialize the CycleGAN class.
@@ -84,9 +79,13 @@ class PerceptualCycleGANModel(BaseModel):
             self.model_names = ['G_A', 'G_B']
 
         # Load the auxiliary model, and freeze it's parameters to prevent it from learning.
-        self.aux_net = self.load_aux_net(opt)
+        self.aux_net = self.load_model_by_path(opt.aux_model_path, name='Classification')
         self.set_requires_grad([self.aux_net], False)
         
+        # Initiate a dictionary to hold activation results from the hook, and set the hook.
+        self.activation = {}
+        self.aux_net.layer4.register_forward_hook(self.get_activation('layer4'))
+
         # Set the aux num of channels
         self.aux_nc = 3
         
@@ -133,12 +132,13 @@ class PerceptualCycleGANModel(BaseModel):
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
         # Calculate auxiliary feature maps
-        self.aux_A = self.aux_net(self.real_A)
-        self.aux_B = self.aux_net(self.real_B)
+        self.aux_A_out = self.aux_net(self.real_A)
+        self.aux_A = self.activation['layer4']
 
-        print(self.aux_A.size())
-        
-        # post-process attention maps
+        self.aux_B_out = self.aux_net(self.real_B)
+        self.aux_B = self.activation['layer4']
+
+        # post-process auxiliary feature maps
         self.heatmap_A, self.aux_A = calculate_heatmap(self.real_A, self.aux_A)
         self.heatmap_B, self.aux_B = calculate_heatmap(self.real_B, self.aux_B)
 
@@ -154,13 +154,13 @@ class PerceptualCycleGANModel(BaseModel):
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>.
-        Add the attention map of input A for the first direction (AtoB) and add the attention map of B for the reversed direction.
+        Add the auxiliary feature map of input A for the first direction (AtoB) and add the auxiliary feature map of B for the reversed direction.
         """
 
-        self.fake_B = self.netG_A(torch.cat((self.real_A, self.att_A), dim=1))  # G_A(A,att_A)
-        self.rec_A = self.netG_B(torch.cat((self.fake_B, self.att_A), dim=1))   # G_B(G_A(A, att_A), att_A)
-        self.fake_A = self.netG_B(torch.cat((self.real_B, self.att_B), dim=1))  # G_B(B, att_B)
-        self.rec_B = self.netG_A(torch.cat((self.fake_A, self.att_B), dim=1))   # G_A(G_B(B, att_B), att_B)
+        self.fake_B = self.netG_A(torch.cat((self.real_A, self.aux_A), dim=1))  # G_A(A,aux_A)
+        self.rec_A = self.netG_B(torch.cat((self.fake_B, self.aux_A), dim=1))   # G_B(G_A(A, aux_A), aux_A)
+        self.fake_A = self.netG_B(torch.cat((self.real_B, self.aux_B), dim=1))  # G_B(B, aux_B)
+        self.rec_B = self.netG_A(torch.cat((self.fake_A, self.aux_B), dim=1))   # G_A(G_B(B, aux_B), aux_B)
 
     def backward_D_basic(self, netD, real, fake):
         """Calculate GAN loss for the discriminator
@@ -202,10 +202,10 @@ class PerceptualCycleGANModel(BaseModel):
         # Identity loss
         if lambda_idt > 0:
             # G_A should be identity if real_B is fed: ||G_A(B) - B||
-            self.idt_A = self.netG_A(torch.cat((self.real_B, self.att_B), dim=1))
+            self.idt_A = self.netG_A(torch.cat((self.real_B, self.aux_B), dim=1))
             self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt
             # G_B should be identity if real_A is fed: ||G_B(A) - A||
-            self.idt_B = self.netG_B(torch.cat((self.real_A, self.att_A), dim=1))
+            self.idt_B = self.netG_B(torch.cat((self.real_A, self.aux_A), dim=1))
             self.loss_idt_B = self.criterionIdt(self.idt_B, self.real_A) * lambda_A * lambda_idt
         else:
             self.loss_idt_A = 0
