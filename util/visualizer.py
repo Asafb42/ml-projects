@@ -6,7 +6,7 @@ import time
 import matplotlib.pyplot as plt
 from . import util, html
 from subprocess import Popen, PIPE
-from torch import tensor
+from torch import tensor, reshape
 
 if sys.version_info[0] == 2:
     VisdomExceptionBase = Exception
