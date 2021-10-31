@@ -70,7 +70,7 @@ if __name__ == '__main__':
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t_comp, t_data)
                 if opt.display_id > 0:
                     visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, losses)
-
+                    
             if total_iters % opt.save_latest_freq == 0:   # cache our latest model every <save_latest_freq> iterations
                 print('saving the latest model (epoch %d, total_iters %d)' % (epoch, total_iters))
                 save_suffix = 'iter_%d' % total_iters if opt.save_by_iter else 'latest'
@@ -82,6 +82,12 @@ if __name__ == '__main__':
             model.save_networks('latest')
             model.save_networks(epoch)
 
+        if hasattr(opt, 'aux_model_eval') and ('aux_model_eval') and (epoch % opt.eval_freq == 0):    # print training evaluations and save logging information to the disk
+            print("Evaluating model:")
+            evals = model.aux_model_evaluation()
+            t_comp = (time.time() - iter_start_time) / opt.batch_size
+            visualizer.print_current_losses(epoch, epoch_iter, evals, t_comp, t_data)
+            
         if (opt.use_val) and (epoch % opt.val_freq == 0):        
             # running sum of correct predictions during evaluation.
             running_corrects = 0
