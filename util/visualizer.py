@@ -74,7 +74,7 @@ class Visualizer():
             from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(opt.log_dir)
 
-        if self.opt.console_display:
+        if not self.opt.no_display:
             self.fig_dir = os.path.join(opt.checkpoints_dir, opt.name, 'figures')
             print('create figures directory %s...' % self.fig_dir)
             util.mkdirs(self.fig_dir)
@@ -118,9 +118,11 @@ class Visualizer():
         """
         
         if self.opt.no_display:
+            # If the no display option is on do not do any action. 
             return
 
-        if self.opt.console_display:
+        else:
+            # Save figures to disk
             if (hasattr(self.opt, 'attention')) and (self.opt.attention is not None):
                 # save attention heatmaps to the disk
                 for label, image in visuals.items():
@@ -135,13 +137,13 @@ class Visualizer():
                     images.append(image_numpy)
                     labels.append(label)
                 
-                r = 2
-                c = int(np.ceil(len(images) / r))
-                fig, axs = plt.subplots(r, c)
+                row = 2
+                col = int(np.ceil(len(images) / row))
+                fig, axs = plt.subplots(row, col)
 
                 cnt = 0
-                for i in range(r):
-                    for j in range(c):
+                for i in range(row):
+                    for j in range(col):
                         if cnt > len(images):
                             break;
 
@@ -152,7 +154,9 @@ class Visualizer():
 
                 fig_path = os.path.join(self.fig_dir, 'epoch%.3d_figure.png' % (epoch))
                 fig.savefig(fig_path)
-                plt.show()
+                if self.opt.console_display:
+                    # Show figure on terminal
+                    plt.show()
 
         if self.use_tensorboard:
 
