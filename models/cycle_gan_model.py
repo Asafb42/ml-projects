@@ -37,9 +37,6 @@ class CycleGANModel(BaseModel):
         Dropout is not used in the original CycleGAN paper.
         """
         parser.set_defaults(no_dropout=True)  # default CycleGAN did not use dropout
-        parser.add_argument('--aux_model_eval', action='store_true', help='Evaluate the model with an auxiliary pre-trained model')
-        parser.add_argument('--aux_model_path', type=str, default=None, help='The path to the pre-trained auxiliary model to load')
-        parser.add_argument('--eval_freq', type=int, default=5, help='The auxiliary model evaluation frequency in epochs')
 
         if is_train:
             parser.add_argument('--lambda_A', type=float, default=10.0, help='weight for cycle loss (A -> B -> A)')
@@ -70,11 +67,6 @@ class CycleGANModel(BaseModel):
             self.model_names = ['G_A', 'G_B', 'D_A', 'D_B']
         else:  # during test time, only load Gs
             self.model_names = ['G_A', 'G_B']
-        
-        if opt.aux_model_eval:
-            # Load the auxiliary evaluation model, and freeze it's parameters to prevent it from learning.
-            self.eval_net = self.load_model_by_path(opt.aux_model_path, name='Classification')
-            self.set_requires_grad([self.eval_net], False)
         
         # define networks (both Generators and discriminators)
         # The naming is different from those used in the paper.
@@ -201,46 +193,3 @@ class CycleGANModel(BaseModel):
         self.backward_D_A()      # calculate gradients for D_A
         self.backward_D_B()      # calculate graidents for D_B
         self.optimizer_D.step()  # update D_A and D_B's weights
-
-    def aux_model_evaluation(self):
-        """Evaluate the classification results of a batch of generated images with an auxiliary classification network"""
-
-        preds_real_A = self.eval_net(self.real_A)
-        _, preds_real_A = torch.max(preds_real_A, 1)
-        
-        label_A, _ = torch.mode(preds_real_A, 0)
-        label_A = torch.ones(preds_real_A.size()[0]).to(self.device) * label_A
-
-        preds_real_B = self.eval_net(self.real_B)
-        _, preds_real_B = torch.max(preds_real_B, 1)
-        
-        label_B, _ = torch.mode(preds_real_B, 0)
-        label_B = torch.ones(preds_real_B.size()[0]).to(self.device) * label_B
-
-        preds_fake_B = self.eval_net(self.fake_B)
-        _, preds_fake_B = torch.max(preds_fake_B, 1)
-
-        preds_fake_A = self.eval_net(self.fake_A)
-        _, preds_fake_A = torch.max(preds_fake_A, 1)
-
-        # Calculate and print accuracies
-        real_A_acc = torch.sum(preds_real_A==label_A)/label_A.size()[0]
-        fake_B_acc = torch.sum(preds_fake_B==label_B)/label_B.size()[0]
-        real_B_acc = torch.sum(preds_real_B==label_B)/label_B.size()[0]
-        fake_A_acc = torch.sum(preds_fake_A==label_A)/label_A.size()[0]
-    
-        aux_eval = {
-            "real_A_acc": real_A_acc,
-            "fake_B_acc": fake_B_acc,
-            "real_B_acc": real_B_acc,
-            "fake_A_acc": fake_A_acc
-        }
-
-        print(label_A.size()[0])
-        print(label_A)
-        print(preds_real_A)
-        print(preds_fake_A)
-
-
-        return aux_eval
-        

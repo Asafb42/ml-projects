@@ -81,12 +81,6 @@ if __name__ == '__main__':
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
             model.save_networks('latest')
             model.save_networks(epoch)
-
-        if hasattr(opt, 'aux_model_eval') and ('aux_model_eval') and (epoch % opt.eval_freq == 0):    # print training evaluations and save logging information to the disk
-            print("Evaluating model:")
-            evals = model.aux_model_evaluation()
-            t_comp = (time.time() - iter_start_time) / opt.batch_size
-            visualizer.print_current_losses(epoch, epoch_iter, evals, t_comp, t_data)
             
         if (opt.use_val) and (epoch % opt.val_freq == 0):        
             # running sum of correct predictions during evaluation.
