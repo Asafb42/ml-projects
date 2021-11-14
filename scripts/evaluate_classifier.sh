@@ -1,0 +1,2 @@
+set -ex
+python evaluate.py --label_num 2 --labelA Normal --labelB COVID --verbose --batch_size 64 --epoch 'best_val_acc' --model classification --dataroot ../Datasets/COVID-19_Radiography_Dataset_organized --name COVID-19_Radiography_resnet50_covid_aug_covid_normal --checkpoints_dir ../Models/COVID-19_Radiography_resnet50/Checkpoints

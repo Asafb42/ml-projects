@@ -1,0 +1,2 @@
+set -ex
+python train.py --model classification --label_num 4 --batch_size 32 --print_freq 640 --dataroot ../Datasets/COVID-19_Radiography_Dataset_organized --name COVID-19_Radiography_resnet50 --checkpoints_dir ../Models/COVID-19_Radiography_resnet50/Checkpoints
