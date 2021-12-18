@@ -117,6 +117,10 @@ class BaseModel(ABC):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
+    def model_evaluation(self):
+        """A model specific evaluation."""
+        pass
+
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
         return self.image_paths

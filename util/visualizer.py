@@ -165,7 +165,7 @@ class Visualizer():
                 image_numpy = util.tensor2im(image)
                 images.append(image_numpy)
                 labels = labels + " / " + label
-            self.writer.add_images(labels, tensor(images), global_step=epoch, dataformats='NHWC')
+            self.writer.add_images(labels, tensor(np.array(images)), global_step=epoch, dataformats='NHWC')
 
         if self.use_visdom:
             if self.display_id > 0:  # show images in the browser using visdom

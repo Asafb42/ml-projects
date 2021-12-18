@@ -116,7 +116,7 @@ class ClassificationModel(BaseModel):
         """
         self.data = input['data'].to(self.device)  # get image data
         self.label = input['label'].to(self.device)
-        self.image_path = input['path']  # get image paths
+        self.image_paths = input['path']  # get image paths
 
 
     def forward(self):
@@ -137,7 +137,7 @@ class ClassificationModel(BaseModel):
         corrects = torch.sum(preds == self.label)
         self.loss_train_acc = corrects.double() / len(preds)
 
-    def get_predictions(self):
+    def model_evaluation(self):
         """ Returns predictions and corresponding ground truth labels
         """
         # forward data

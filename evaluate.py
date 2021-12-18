@@ -48,7 +48,7 @@ if __name__ == '__main__':
                 break
 
             model.set_input(data)  # unpack data from data loader
-            current_preds, current_labels = model.get_predictions() # forward data and calculate predictions        
+            current_preds, current_labels = model.model_evaluation() # forward data and calculate predictions        
             
             predictions.extend(current_preds.tolist())
             labels.extend(current_labels.tolist())
@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     # If it's not a binary classification problem calculate only accuracy. 
     # If it's a binary classification problem calculate numerus binary evalutaion metrics. 
-    if opt.label_num > 2:
+    if (opt.model is not "classification") and (opt.label_num > 2):
         test_acc = 100 * np.sum(predictions == labels) / len(dataset)
         print("Test evaluation results:\nTest size: %d\nAccuracy: %f\n" % (len(dataset), test_acc))
         print("Confusion Matrix:\n", confusion_matrix(labels, predictions))

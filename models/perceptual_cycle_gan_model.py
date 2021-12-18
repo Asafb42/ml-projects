@@ -39,6 +39,7 @@ class PerceptualCycleGANModel(BaseModel):
         """
         parser.set_defaults(no_dropout=True)  # default CycleGAN did not use dropout
         parser.add_argument('--aux_model_path', type=str, default=None, help='The path to the pretrained auxiliary network to load')
+        parser.add_argument('--eval_net_path', type=str, default=None, help='evaluate gan model using a classifier, contains the path to the evaluation model.')
         if is_train:
             parser.add_argument('--lambda_A', type=float, default=10.0, help='weight for cycle loss (A -> B -> A)')
             parser.add_argument('--lambda_B', type=float, default=10.0, help='weight for cycle loss (B -> A -> B)')
@@ -89,6 +90,16 @@ class PerceptualCycleGANModel(BaseModel):
         # Set the aux num of channels
         self.aux_nc = 3
         
+        # Load the evaluation network, if it exists, and freeze it's parameters to prevent it from learning.
+        if (self.isTrain) and (opt.use_val):
+
+            # If an evaluation network was not specified use the auxiliary network by default.
+            if(opt.eval_net_path is None):
+                opt.eval_net_path = opt.aux_model_path
+            
+            self.eval_net = self.load_model_by_path(opt.eval_net_path, name='Classification')
+            self.set_requires_grad([self.eval_net], False)
+
         # define networks (both Generators and discriminators)
         # The naming is different from those used in the paper.
         # Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
@@ -238,3 +249,21 @@ class PerceptualCycleGANModel(BaseModel):
         self.backward_D_A()      # calculate gradients for D_A
         self.backward_D_B()      # calculate graidents for D_B
         self.optimizer_D.step()  # update D_A and D_B's weights
+
+    def model_evaluation(self):
+            """Generate synthetic images, and evaluate their accuracy using the pre-trained evalualtion network"""
+            # Generate images
+            self.forward()
+
+            # Prepare the data in the correct form with the corresponding labels.
+            images = torch.cat((self.fake_A, self.fake_B), dim=0).to(self.device)
+            labels = torch.cat((torch.zeros(self.batch_size), torch.ones(self.batch_size)), dim=0).to(self.device)
+
+            # forward the data to the evaluation network
+            with torch.no_grad():
+                preds = self.eval_net(images)
+
+            # calculate predictions
+            _, preds = torch.max(preds, 1)
+
+            return preds, labels

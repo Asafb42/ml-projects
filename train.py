@@ -92,12 +92,11 @@ if __name__ == '__main__':
             model.eval()
 
             with torch.no_grad():
-                for i, data in enumerate(val_set):  # inner loop for validation within one epoch
-                    iter_start_time = time.time()   # timer for computation per iteration
+                for i, data in enumerate(val_set):              # inner loop for validation within one epoch
+                    iter_start_time = time.time()               # timer for computation per iteration
 
-                    model.set_input(data)           # unpack data from the validation set and apply preprocessing
-                    
-                    preds, labels = model.get_predictions() # forward data and calculate predictions
+                    model.set_input(data)                       # unpack data from the validation set and apply preprocessing
+                    preds, labels = model.model_evaluation()    # forward data and calculate predictions
                     corrects = torch.sum(preds == labels)
 
                     running_corrects += corrects
