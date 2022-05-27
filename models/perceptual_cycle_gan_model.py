@@ -44,7 +44,8 @@ class PerceptualCycleGANModel(BaseModel):
             parser.add_argument('--lambda_A', type=float, default=10.0, help='weight for cycle loss (A -> B -> A)')
             parser.add_argument('--lambda_B', type=float, default=10.0, help='weight for cycle loss (B -> A -> B)')
             parser.add_argument('--lambda_identity', type=float, default=0.5, help='use identity mapping. Setting lambda_identity other than 0 has an effect of scaling the weight of the identity mapping loss. For example, if the weight of the identity loss should be 10 times smaller than the weight of the reconstruction loss, please set lambda_identity = 0.1')
-
+        else:
+            parser.add_argument('--use_val', action='store_true', help='Use the specified evaluation network during evaluation')
         return parser
 
     def get_activation(self, name):
@@ -91,7 +92,7 @@ class PerceptualCycleGANModel(BaseModel):
         self.aux_nc = 3
         
         # Load the evaluation network, if it exists, and freeze it's parameters to prevent it from learning.
-        if (self.isTrain) and (opt.use_val):
+        if opt.use_val:
 
             # If an evaluation network was not specified use the auxiliary network by default.
             if(opt.eval_net_path is None):

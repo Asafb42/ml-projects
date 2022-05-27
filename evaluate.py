@@ -12,12 +12,12 @@ import os
 import numpy as np
 import torch
 import time
-from util.measurments import analyze_results
 from options.test_options import TestOptions
 from data import create_dataset
 from models import create_model
 from util.visualizer import save_images
 from util import html
+from util.measurments import analyze_results
 from sklearn.metrics import confusion_matrix
 
 if __name__ == '__main__':
@@ -44,9 +44,6 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         for i, data in enumerate(dataset):
-            if i >= opt.num_test:  # only apply our model to opt.num_test images.
-                break
-
             model.set_input(data)  # unpack data from data loader
             current_preds, current_labels = model.model_evaluation() # forward data and calculate predictions        
             
@@ -60,9 +57,9 @@ if __name__ == '__main__':
 
     # If it's not a binary classification problem calculate only accuracy. 
     # If it's a binary classification problem calculate numerus binary evalutaion metrics. 
-    if (opt.model is not "classification") and (opt.label_num > 2):
-        test_acc = 100 * np.sum(predictions == labels) / len(dataset)
-        print("Test evaluation results:\nTest size: %d\nAccuracy: %f\n" % (len(dataset), test_acc))
+    if (opt.model is not "classification") or (opt.label_num > 2):
+        test_acc = 100 * np.sum(predictions == labels) / len(labels)
+        print("Test evaluation results:\nTest size: %d\nAccuracy: %f\n" % (len(labels), test_acc))
         print("Confusion Matrix:\n", confusion_matrix(labels, predictions))
     else:
         auc, dice, ppv, sens, acc , npv, spec, tp, fn, fp, tn = analyze_results(predictions, labels)
