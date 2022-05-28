@@ -9,8 +9,6 @@ import shutil
 if __name__ == '__main__':
     
     folderpath = '..\..\Datasets\LITS_organized'
-    filepath = os.path.join(folderpath, 'segmentations')
-    imgfile = os.path.join(folderpath, 'image_dataset/temp')
     
     for top_dir in os.listdir(folderpath):
         
