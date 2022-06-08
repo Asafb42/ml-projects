@@ -157,6 +157,7 @@ class Visualizer():
                 if self.opt.console_display:
                     # Show figure on terminal
                     plt.show()
+                plt.close(fig)
 
         if self.use_tensorboard:
 
