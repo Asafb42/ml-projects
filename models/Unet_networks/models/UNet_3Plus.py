@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from layers import unetConv2
-from init_weights import init_weights
+from .layers import unetConv2
+from .init_weights import init_weights
 '''
     UNet 3+
 '''
