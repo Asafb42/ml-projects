@@ -2,7 +2,6 @@ import os
 from data.base_dataset import BaseDataset, get_transform, get_params
 from data.image_folder import make_dataset
 from PIL import Image
-import numpy as np
 
 class SegmentationDataset(BaseDataset):
 

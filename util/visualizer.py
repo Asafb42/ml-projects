@@ -137,15 +137,23 @@ class Visualizer():
                     images.append(image_numpy)
                     labels.append(label)
                 
-                row = 2
+                if (self.opt.dataset_mode == "segmentation"):
+                    row = 1
+                else:
+                    row = 2
+
                 col = int(np.ceil(len(images) / row))
                 fig, axs = plt.subplots(row, col)
+                
+                if (row == 1):
+                    axs = np.expand_dims(axs, axis=0)
 
+                print(col, row, fig, axs)
                 cnt = 0
                 for i in range(row):
                     for j in range(col):
                         if cnt > len(images):
-                            break;
+                            break
 
                         axs[i,j].imshow(images[cnt], cmap='gray')
                         axs[i,j].set_title(labels[cnt])

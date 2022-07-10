@@ -56,7 +56,8 @@ class UnetModel(BaseModel):
             raise NotImplementedError('Unet model name [%s] is not recognized' % opt.unet_type)
 
         # Update input size
-        #opt.crop_size = 320
+        opt.load_size = 512
+        opt.crop_size = 320
         
         # Initialize network for training.
         if len(self.gpu_ids) > 0:
@@ -79,7 +80,7 @@ class UnetModel(BaseModel):
         # specify the training losses you want to print out. The program will call base_model.get_current_losses to plot the losses to the console and save them to the disk.
         self.loss_names = ['IOU', 'BCE']
         # specify the images you want to save and display. The program will call base_model.get_current_visuals to save and display these images.
-        self.visual_names = ['img', 'seg']
+        self.visual_names = ['img', 'seg', 'output']
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks to save and load networks.
         # you can use opt.isTrain to specify different behaviors for training and test. For example, some networks will not be used during test, and you don't need to load them.
         self.model_names = ['Unet']
