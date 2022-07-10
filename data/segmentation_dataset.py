@@ -2,6 +2,7 @@ import os
 from data.base_dataset import BaseDataset, get_transform, get_params
 from data.image_folder import make_dataset
 from PIL import Image
+import numpy as np
 
 class SegmentationDataset(BaseDataset):
 
@@ -25,6 +26,7 @@ class SegmentationDataset(BaseDataset):
         Returns:
             the modified parser.
         """
+        parser.set_defaults(output_nc=1)  # The default segmentation dataset outputs a greyscale segmentation mask.
         parser.add_argument('--label_num', type=int, default=1, help='Num of labels for a multilabel segmentation task')
         parser.add_argument('--images_dir', type=str, default='volumes', help='The images directory name')
         parser.add_argument('--segmentation_dir', type=str, default='segmentations', help='The segmentations directory name')
@@ -39,24 +41,22 @@ class SegmentationDataset(BaseDataset):
         BaseDataset.__init__(self, opt)
         
         self.label_num = opt.label_num
-        self.labels = []
-        self.dirs  = []
-        self.paths = []
-        self.sizes = []
+        self.img_paths = []
+        self.seg_paths = []
 
         phase_dir = os.path.join(opt.dataroot, opt.phase)
         self.img_dir_path = os.path.join(phase_dir, opt.images_dir)
         self.seg_dir_path = os.path.join(phase_dir, opt.segmentation_dir)
 
         # A list for all the images paths
-        self.img_paths.append(sorted(make_dataset(self.img_dir_path, opt.max_dataset_size)))
+        self.img_paths = sorted(make_dataset(self.img_dir_path, opt.max_dataset_size))
 
         # A list for all the segmentatgions paths
-        self.seg_paths.append(sorted(make_dataset(self.seg_dir_path, opt.max_dataset_size)))
+        self.seg_paths = sorted(make_dataset(self.seg_dir_path, opt.max_dataset_size))
 
         # Get the required transforms
-        self.img_transform = get_transform(self.opt, grayscale=(self.input_nc == 1))
-        self.seg_transform = get_transform(self.opt, grayscale=(self.output_nc == 1))
+        self.img_transform = get_transform(opt, grayscale=(opt.input_nc == 1))
+        self.seg_transform = get_transform(opt, grayscale=(opt.output_nc == 1))
 
         # Get the full dataset size
         self.dataset_size = len(self.img_paths)
@@ -81,14 +81,14 @@ class SegmentationDataset(BaseDataset):
         img_path = self.img_paths[index]
         seg_path = self.seg_paths[index]
 
-        img = Image.open(img_path)
-        seg = Image.open(seg_path)
+        img = Image.open(img_path).convert('RGB')
+        seg = Image.open(seg_path).convert('L')
 
         # apply the same transform to both A and B
 
         img = self.img_transform(img)
         seg = self.seg_transform(seg)
-
+        
         return {'img': img, 'seg': seg, 'img_paths': img_path, 'seg_paths': seg_path}
 
     def __len__(self):

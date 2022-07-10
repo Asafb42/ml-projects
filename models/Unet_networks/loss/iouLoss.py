@@ -28,5 +28,5 @@ class IOU(torch.nn.Module):
 def IOU_loss(pred,label):
     iou_loss = IOU(size_average=True)
     iou_out = iou_loss(pred, label)
-    print("iou_loss:", iou_out.data.cpu().numpy())
+    #print("iou_loss:", iou_out.data.cpu().numpy())
     return iou_out

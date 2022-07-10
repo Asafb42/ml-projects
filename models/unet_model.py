@@ -43,15 +43,15 @@ class UnetModel(BaseModel):
 
         # Create the UNet model.
         if opt.unet_type == 'unet':
-            model = UNet.UNet(in_channels=model.fc.in_features, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)
+            model = UNet.UNet(in_channels=opt.input_nc, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)
         elif opt.unet_type == 'unet_2plus':
-            model = UNet_2Plus.UNet_2Plus(in_channels=model.fc.in_features, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)
+            model = UNet_2Plus.UNet_2Plus(in_channels=opt.input_nc, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)
         elif opt.unet_type == 'unet_3plus':
-            model = UNet_3Plus.UNet_3Plus(in_channels=model.fc.in_features, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)
+            model = UNet_3Plus.UNet_3Plus(in_channels=opt.input_nc, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)
         elif opt.unet_type == 'unet_3plus_deepsup':
-            model = UNet_3Plus.UNet_3Plus_DeepSup(in_channels=model.fc.in_features, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)
+            model = UNet_3Plus.UNet_3Plus_DeepSup(in_channels=opt.input_nc, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)
         elif opt.unet_type == 'unet_3plus_deepsup_cgm':
-            model = UNet_3Plus.UNet_3Plus_DeepSup_CGM(in_channels=model.fc.in_features, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)      
+            model = UNet_3Plus.UNet_3Plus_DeepSup_CGM(in_channels=opt.input_nc, n_classes=opt.label_num, is_deconv=True, is_batchnorm=True)      
         else:
             raise NotImplementedError('Unet model name [%s] is not recognized' % opt.unet_type)
 
