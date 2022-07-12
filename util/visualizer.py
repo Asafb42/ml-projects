@@ -148,7 +148,6 @@ class Visualizer():
                 if (row == 1):
                     axs = np.expand_dims(axs, axis=0)
 
-                print(col, row, fig, axs)
                 cnt = 0
                 for i in range(row):
                     for j in range(col):

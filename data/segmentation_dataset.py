@@ -53,10 +53,6 @@ class SegmentationDataset(BaseDataset):
         # A list for all the segmentatgions paths
         self.seg_paths = sorted(make_dataset(self.seg_dir_path, opt.max_dataset_size))
 
-        # Get the required transforms
-        self.img_transform = get_transform(opt, grayscale=(opt.input_nc == 1))
-        self.seg_transform = get_transform(opt, grayscale=(opt.output_nc == 1))
-
         # Get the full dataset size
         self.dataset_size = len(self.img_paths)
 
@@ -82,11 +78,14 @@ class SegmentationDataset(BaseDataset):
 
         img = Image.open(img_path).convert('RGB')
         seg = Image.open(seg_path).convert('L')
-
+        
         # apply the same transform to both A and B
+        transform_params = get_params(self.opt, img.size)
+        img_transform = get_transform(self.opt, transform_params, grayscale=(self.opt.input_nc == 1))
+        seg_transform = get_transform(self.opt, transform_params, grayscale=(self.opt.output_nc == 1))
 
-        img = self.img_transform(img)
-        seg = self.seg_transform(seg)
+        img = img_transform(img)
+        seg = seg_transform(seg)
         
         return {'img': img, 'seg': seg, 'img_paths': img_path, 'seg_paths': seg_path}
 

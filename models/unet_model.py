@@ -19,6 +19,7 @@ import torch
 from .base_model import BaseModel
 from .Unet_networks.models import UNet, UNet_2Plus, UNet_3Plus
 from .Unet_networks.loss import bceLoss, iouLoss, msssimLoss
+from random import randint
 
 class UnetModel(BaseModel):
     @staticmethod
@@ -35,6 +36,7 @@ class UnetModel(BaseModel):
         parser.set_defaults(dataset_mode='segmentation')  # Unet model uses a segmentation dataset.
         if is_train:
             parser.add_argument('--unet_type', type=str, default='unet', help='Specify the type of Unet to use [unet | unet_2plus | unet_3plus | unet_3plus_deepsup | unet_3plus_deepsup_cgm]')
+            parser.add_argument('--loss_type', type=str, default='bce', help='the type of loss objective. [bce | iou]. Default loss is the binary cross-entropy loss function.')
 
         return parser
 
@@ -79,8 +81,10 @@ class UnetModel(BaseModel):
         BaseModel.__init__(self, opt)  # call the initialization method of BaseModel
         # specify the training losses you want to print out. The program will call base_model.get_current_losses to plot the losses to the console and save them to the disk.
         self.loss_names = ['IOU', 'BCE']
+        self.loss_type = opt.loss_type
+
         # specify the images you want to save and display. The program will call base_model.get_current_visuals to save and display these images.
-        self.visual_names = ['img', 'seg', 'output']
+        self.visual_names = ['input_image', 'true_seg', 'pred_seg']
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks to save and load networks.
         # you can use opt.isTrain to specify different behaviors for training and test. For example, some networks will not be used during test, and you don't need to load them.
         self.model_names = ['Unet']
@@ -106,6 +110,7 @@ class UnetModel(BaseModel):
         """
         self.img = input['img'].to(self.device)  # get image data
         self.seg = input['seg'].to(self.device)  # get segmentation data
+        self.seg = (self.seg + 1) / 2
         self.image_paths = input['img_paths']    # get image paths
 
     def forward(self):
@@ -117,10 +122,14 @@ class UnetModel(BaseModel):
         # caculate the intermediate results if necessary; here self.output has been computed during function <forward>
         # calculate loss given the input and intermediate results
         self.loss_IOU = iouLoss.IOU_loss(self.output, self.seg)
-        #self.loss_IOU.backward()       # calculate gradients of the network w.r.t. IOU loss
 
         self.loss_BCE = bceLoss.BCE_loss(self.output, self.seg)
-        self.loss_BCE.backward()       # calculate gradients of the network w.r.t. BCE loss
+
+        if (self.loss_type.lower() == 'iou'):
+            self.loss_IOU.backward()       # calculate gradients of the network w.r.t. IOU loss
+
+        elif (self.loss_type.lower() == 'bce'):
+            self.loss_BCE.backward()       # calculate gradients of the network w.r.t. BCE loss
 
     def optimize_parameters(self):
         """Update network weights; it will be called in every training iteration."""
@@ -128,3 +137,22 @@ class UnetModel(BaseModel):
         self.optimizer.zero_grad()   # clear network G's existing gradients
         self.backward()              # calculate gradients for network G
         self.optimizer.step()        # update gradients for network G
+
+    def compute_visuals(self):
+        """Calculate additional output images for visualization"""
+        
+        # Choose a random sample from the batch
+        idx = randint(0, self.opt.batch_size - 1)
+        
+        # Get the image from thje batch and add an extra 0 dimension for a 4 dimension tensor.
+        self.input_image = self.img[idx]
+        self.input_image = torch.unsqueeze(self.input_image, 0)
+
+        # Normailize the masks to [-1:1].
+        self.true_seg = self.seg[idx] * 2 - 1
+        self.true_seg = torch.unsqueeze(self.true_seg, 0)
+
+        self.pred_seg = self.output[idx] * 2 - 1
+        self.pred_seg = torch.unsqueeze(self.pred_seg, 0)
+
+
