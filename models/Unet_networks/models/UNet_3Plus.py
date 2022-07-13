@@ -239,7 +239,7 @@ class UNet_3Plus(nn.Module):
             torch.cat((h1_Cat_hd1, hd2_UT_hd1, hd3_UT_hd1, hd4_UT_hd1, hd5_UT_hd1), 1)))) # hd1->320*320*UpChannels
 
         d1 = self.outconv1(hd1)  # d1->320*320*n_classes
-        return F.sigmoid(d1)
+        return torch.sigmoid(d1)
     
 '''
     UNet 3+ with deep supervision
@@ -497,7 +497,7 @@ class UNet_3Plus_DeepSup(nn.Module):
         d2 = self.upscore2(d2) # 128->256
 
         d1 = self.outconv1(hd1) # 256
-        return F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5)
+        return torch.sigmoid(d1), torch.sigmoid(d2), torch.sigmoid(d3), torch.sigmoid(d4), torch.sigmoid(d5)
     
 '''
     UNet 3+ with deep supervision and class-guided module
@@ -781,4 +781,4 @@ class UNet_3Plus_DeepSup_CGM(nn.Module):
         d4 = self.dotProduct(d4, cls_branch_max)
         d5 = self.dotProduct(d5, cls_branch_max)
 
-        return F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5)
+        return torch.sigmoid(d1), torch.sigmoid(d2), torch.sigmoid(d3), torch.sigmoid(d4), torch.sigmoid(d5)

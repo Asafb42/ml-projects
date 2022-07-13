@@ -96,9 +96,9 @@ class UNet_2Plus(nn.Module):
         final = (final_1 + final_2 + final_3 + final_4) / 4
 
         if self.is_ds:
-            return F.sigmoid(final)
+            return torch.sigmoid(final)
         else:
-            return F.sigmoid(final_4)
+            return torch.sigmoid(final_4)
 
 model = UNet_2Plus()
 print('# generator parameters:', 1.0 * sum(param.numel() for param in model.parameters())/1000000)
