@@ -117,6 +117,10 @@ class BaseModel(ABC):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
+    def compute_losses(self):
+        """Calculate additional losses for console display and log file"""
+        pass
+
     def model_evaluation(self):
         """A model specific evaluation."""
         pass
@@ -147,6 +151,7 @@ class BaseModel(ABC):
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
+        self.compute_losses()
         errors_ret = OrderedDict()
         for name in self.loss_names:
             if isinstance(name, str):

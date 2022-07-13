@@ -18,7 +18,7 @@ You need to implement the following functions:
 import torch
 from .base_model import BaseModel
 from .Unet_networks.models import UNet, UNet_2Plus, UNet_3Plus
-from .Unet_networks.loss import bceLoss, iouLoss, msssimLoss
+from .Unet_networks.loss import iouLoss, msssimLoss
 from random import randint
 
 class UnetModel(BaseModel):
@@ -80,8 +80,7 @@ class UnetModel(BaseModel):
         """
         BaseModel.__init__(self, opt)  # call the initialization method of BaseModel
         # specify the training losses you want to print out. The program will call base_model.get_current_losses to plot the losses to the console and save them to the disk.
-        self.loss_names = ['IOU', 'BCE']
-        self.loss_type = opt.loss_type
+        self.loss_names = ['IOU', 'BCE', 'MSSSIM']
 
         # specify the images you want to save and display. The program will call base_model.get_current_visuals to save and display these images.
         self.visual_names = ['input_image', 'true_seg', 'pred_seg']
@@ -91,8 +90,13 @@ class UnetModel(BaseModel):
         # define networks; you can use opt.isTrain to specify different behaviors for training and test.
         self.netUnet = self.get_network_by_name(opt)
         if self.isTrain:  # only defined during training time
-            #self.criterionIOU = iouLoss.IOU_loss()
-            #self.criterionBCE = bceLoss.BCE_loss()
+            
+            # Define loss criterion and select the chosen loss for training.
+            self.criterionBCE = torch.nn.BCELoss(reduction='mean')
+            self.criterionIOU = iouLoss.IOU(size_average=True)
+            self.criterionMSSSIM = msssimLoss.MSSSIM(size_average=True)
+
+            self.train_criterion = getattr(self, 'criterion' + opt.loss_type.upper())
 
             # define and initialize optimizers. You can define one optimizer for each network.
             #self.optimizer = torch.optim.Adam(self.netUnet.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -121,16 +125,10 @@ class UnetModel(BaseModel):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         # caculate the intermediate results if necessary; here self.output has been computed during function <forward>
         # calculate loss given the input and intermediate results
-        self.loss_IOU = iouLoss.IOU_loss(self.output, self.seg)
 
-        self.loss_BCE = bceLoss.BCE_loss(self.output, self.seg)
-
-        if (self.loss_type.lower() == 'iou'):
-            self.loss_IOU.backward()       # calculate gradients of the network w.r.t. IOU loss
-
-        elif (self.loss_type.lower() == 'bce'):
-            self.loss_BCE.backward()       # calculate gradients of the network w.r.t. BCE loss
-
+        self.train_loss = self.train_criterion(self.output, self.seg)
+        self.train_loss.backward()       # calculate gradients of the network w.r.t. the chosen loss criterion.
+        
     def optimize_parameters(self):
         """Update network weights; it will be called in every training iteration."""
         self.forward()               # first call forward to calculate intermediate results
@@ -155,4 +153,8 @@ class UnetModel(BaseModel):
         self.pred_seg = self.output[idx] * 2 - 1
         self.pred_seg = torch.unsqueeze(self.pred_seg, 0)
 
-
+    def compute_losses(self):
+        """Calculate additional losses for console display and log file"""
+        self.loss_BCE = self.criterionBCE(self.output, self.seg)
+        self.loss_IOU = 1 - self.criterionIOU(self.output, self.seg)
+        self.loss_MSSSIM = self.criterionMSSSIM(self.output, self.seg)
