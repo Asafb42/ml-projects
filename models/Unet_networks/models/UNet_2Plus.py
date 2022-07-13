@@ -99,11 +99,3 @@ class UNet_2Plus(nn.Module):
             return torch.sigmoid(final)
         else:
             return torch.sigmoid(final_4)
-
-model = UNet_2Plus()
-#print('# generator parameters:', 1.0 * sum(param.numel() for param in model.parameters())/1000000)
-#params = list(model.named_parameters())
-#for i in range(len(params)):
-#    (name, param) = params[i]
-#    print(name)
-#    print(param.shape)
